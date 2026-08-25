@@ -1,4 +1,4 @@
-﻿export interface Patrimonio {
+export interface Patrimonio {
   id?: string;
   codigo: string;
   descricao: string;
@@ -7,7 +7,10 @@
   localizacao?: string;
   responsavel?: string;
   numero_serie?: string;
-  status: 'Ativo' | 'Em Manutenção' | 'Inativo' | 'Baixado' | string;
+  status: 'Ativo' | 'Em Manutenção' | 'Inativo' | 'Baixado' | 'Avariado' | string;
+  condicao?: string;
+  ultima_conferencia_at?: string;
+  observacoes?: string;
   created_at?: string;
 }
 
@@ -17,3 +20,4 @@ export interface SupabaseConfig {
   url: string;
   anonKey: string;
 }
+

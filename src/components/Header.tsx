@@ -1,8 +1,8 @@
-import { Search, PlusCircle, List, Settings, LogOut } from 'lucide-react';
+import { Search, PlusCircle, List, Settings, LogOut, ClipboardCheck } from 'lucide-react';
 
 interface HeaderProps {
-  currentScreen: 'home' | 'new' | 'scan' | 'list' | 'config';
-  onNavigate: (screen: 'home' | 'new' | 'scan' | 'list' | 'config') => void;
+  currentScreen: 'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia';
+  onNavigate: (screen: 'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia') => void;
   userEmail?: string | null;
   onLogout?: () => void;
 }
@@ -78,6 +78,18 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           <button
+            onClick={() => onNavigate('conferencia')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+              currentScreen === 'conferencia'
+                ? 'bg-emerald-500 text-black font-black shadow-xs'
+                : 'text-emerald-300 hover:text-white hover:bg-emerald-950/40'
+            }`}
+          >
+            <ClipboardCheck className="w-3.5 h-3.5" />
+            <span>Conferência</span>
+          </button>
+
+          <button
             onClick={() => onNavigate('list')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
               currentScreen === 'list'
@@ -101,6 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Configurações</span>
           </button>
         </nav>
+
 
         {/* Lado Direito: Usuário Logado + Sair */}
         <div className="flex items-center gap-3 shrink-0">

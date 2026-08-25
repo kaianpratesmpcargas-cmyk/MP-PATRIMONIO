@@ -283,3 +283,51 @@ export async function createPatrimoniosBatch(
   return (data as Patrimonio[]) || [];
 }
 
+/**
+ * Atualiza o status, condição e registra a data de conferência de um patrimônio
+ */
+export async function updatePatrimonioConferencia(
+  codigo: string,
+  data: {
+    status: string;
+    condicao?: string;
+    observacoes?: string;
+    setor?: string;
+    localizacao?: string;
+    responsavel?: string;
+  }
+): Promise<Patrimonio> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    throw new Error('Supabase não conectado.');
+  }
+
+  const formattedCode = formatCodeInput(codigo);
+  const nowIso = new Date().toISOString();
+
+  const payload: any = {
+    status: data.status,
+    ultima_conferencia_at: nowIso,
+  };
+
+  if (data.condicao !== undefined) payload.condicao = data.condicao;
+  if (data.observacoes !== undefined) payload.observacoes = data.observacoes;
+  if (data.setor !== undefined) payload.setor = data.setor;
+  if (data.localizacao !== undefined) payload.localizacao = data.localizacao;
+  if (data.responsavel !== undefined) payload.responsavel = data.responsavel;
+
+  const { data: updated, error } = await supabase
+    .from('patrimonios')
+    .update(payload)
+    .ilike('codigo', formattedCode)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message || 'Erro ao registrar conferência do patrimônio.');
+  }
+
+  return updated as Patrimonio;
+}
+
+

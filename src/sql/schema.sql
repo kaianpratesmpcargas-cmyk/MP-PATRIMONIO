@@ -14,13 +14,23 @@ CREATE TABLE IF NOT EXISTS public.patrimonios (
     responsavel VARCHAR(100),
     numero_serie VARCHAR(100),
     status VARCHAR(50) DEFAULT 'Ativo',
+    condicao VARCHAR(100) DEFAULT 'Funcionando 100%',
+    ultima_conferencia_at TIMESTAMP WITH TIME ZONE,
+    observacoes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 2. Índices para Pesquisa Ultra Rápida
+-- Migrações automáticas para tabelas já existentes:
+ALTER TABLE public.patrimonios ADD COLUMN IF NOT EXISTS condicao VARCHAR(100) DEFAULT 'Funcionando 100%';
+ALTER TABLE public.patrimonios ADD COLUMN IF NOT EXISTS ultima_conferencia_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.patrimonios ADD COLUMN IF NOT EXISTS observacoes TEXT;
+
+-- 2. Índices para Pesquisa Instantânea
 CREATE INDEX IF NOT EXISTS idx_patrimonios_codigo ON public.patrimonios (codigo);
 CREATE INDEX IF NOT EXISTS idx_patrimonios_descricao ON public.patrimonios USING gin(to_tsvector('portuguese', descricao));
 CREATE INDEX IF NOT EXISTS idx_patrimonios_numero_serie ON public.patrimonios (numero_serie);
+CREATE INDEX IF NOT EXISTS idx_patrimonios_ultima_conferencia ON public.patrimonios (ultima_conferencia_at);
+
 
 -- 3. Sequência para Códigos Automáticos PAT-000001, PAT-000002...
 CREATE SEQUENCE IF NOT EXISTS patrimonio_seq START WITH 1;

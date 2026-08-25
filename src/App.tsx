@@ -5,11 +5,12 @@ import { NewPatrimonioScreen } from './screens/NewPatrimonioScreen';
 import { ScanSearchScreen } from './screens/ScanSearchScreen';
 import { PatrimoniosListScreen } from './screens/PatrimoniosListScreen';
 import { ConfigScreen } from './screens/ConfigScreen';
+import { ConferenciaScreen } from './screens/ConferenciaScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { getSupabase } from './services/supabase';
 
 export function App() {
-  const [currentScreen, setCurrentScreen] = useState<'home' | 'new' | 'scan' | 'list' | 'config'>('home');
+  const [currentScreen, setCurrentScreen] = useState<'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia'>('home');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return Boolean(localStorage.getItem('mp_user_email'));
   });
@@ -61,7 +62,7 @@ export function App() {
     setCurrentScreen('scan');
   };
 
-  const handleNavigate = (screen: 'home' | 'new' | 'scan' | 'list' | 'config') => {
+  const handleNavigate = (screen: 'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia') => {
     if (screen !== 'scan') {
       setScanInitialCode('');
     }
@@ -82,8 +83,6 @@ export function App() {
         userEmail={userEmail}
         onLogout={handleLogout}
       />
-
-
 
       {/* Área Principal de Conteúdo */}
       <main className="flex-1 flex flex-col pb-24 md:pb-6">
@@ -106,6 +105,12 @@ export function App() {
           />
         )}
 
+        {currentScreen === 'conferencia' && (
+          <ConferenciaScreen
+            onBack={() => handleNavigate('home')}
+          />
+        )}
+
         {currentScreen === 'list' && (
           <PatrimoniosListScreen
             onBack={() => handleNavigate('home')}
@@ -122,10 +127,10 @@ export function App() {
       </main>
 
       {/* Rodapé Fixo no Celular (Otimizado para iPhone Pro/Max Notch e Android) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#111111]/95 backdrop-blur-md text-white border-t-2 border-[#FFD100] px-3 pt-2 safe-bottom flex items-center justify-around z-30 shadow-2xl select-none no-print">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#111111]/95 backdrop-blur-md text-white border-t-2 border-[#FFD100] px-2 pt-2 safe-bottom flex items-center justify-around z-30 shadow-2xl select-none no-print">
         <button
           onClick={() => handleNavigate('home')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-2 transition-colors active:scale-95 ${
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold py-1 px-1.5 transition-colors active:scale-95 ${
             currentScreen === 'home' ? 'text-[#FFD100]' : 'text-gray-400'
           }`}
         >
@@ -134,18 +139,27 @@ export function App() {
 
         <button
           onClick={() => handleNavigate('new')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-black py-1 px-2 transition-transform active:scale-95 ${
+          className={`flex flex-col items-center gap-1 text-[10px] font-black py-1 px-1.5 transition-transform active:scale-95 ${
             currentScreen === 'new' ? 'text-[#FFD100]' : 'text-gray-300'
           }`}
         >
-          <span className="bg-[#FFD100] text-black px-2.5 py-0.5 rounded-full text-xs font-black shadow-xs">
+          <span className="bg-[#FFD100] text-black px-2 py-0.5 rounded-full text-[11px] font-black shadow-xs">
             + NOVO
           </span>
         </button>
 
         <button
+          onClick={() => handleNavigate('conferencia')}
+          className={`flex flex-col items-center gap-1 text-[10px] font-black py-1 px-1.5 transition-colors active:scale-95 ${
+            currentScreen === 'conferencia' ? 'text-emerald-400' : 'text-emerald-300'
+          }`}
+        >
+          <span>Auditar</span>
+        </button>
+
+        <button
           onClick={() => handleNavigate('scan')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-2 transition-colors active:scale-95 ${
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold py-1 px-1.5 transition-colors active:scale-95 ${
             currentScreen === 'scan' ? 'text-[#FFD100]' : 'text-gray-400'
           }`}
         >
@@ -154,7 +168,7 @@ export function App() {
 
         <button
           onClick={() => handleNavigate('list')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-2 transition-colors active:scale-95 ${
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold py-1 px-1.5 transition-colors active:scale-95 ${
             currentScreen === 'list' ? 'text-[#FFD100]' : 'text-gray-400'
           }`}
         >
@@ -163,7 +177,7 @@ export function App() {
 
         <button
           onClick={() => handleNavigate('config')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-2 transition-colors active:scale-95 ${
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold py-1 px-1.5 transition-colors active:scale-95 ${
             currentScreen === 'config' ? 'text-[#FFD100]' : 'text-gray-400'
           }`}
         >
@@ -172,7 +186,7 @@ export function App() {
 
         <button
           onClick={handleLogout}
-          className="flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-2 text-gray-400 hover:text-red-400 active:scale-95"
+          className="flex flex-col items-center gap-1 text-[10px] font-bold py-1 px-1.5 text-gray-400 hover:text-red-400 active:scale-95"
           title="Sair do sistema"
         >
           <span>Sair</span>
@@ -182,8 +196,7 @@ export function App() {
   );
 }
 
-
-
 export default App;
+
 
 
