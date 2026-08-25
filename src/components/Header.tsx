@@ -14,8 +14,9 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
 }) => {
   return (
-    <header className="bg-[#111111] text-white border-b-[3px] border-[#FFD100] sticky top-0 z-40 shadow-md select-none no-print">
+    <header className="bg-[#111111] text-white border-b-[3px] border-[#FFD100] sticky top-0 z-40 shadow-md select-none no-print safe-top">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+
         {/* Marca / Logotipo */}
         <div
           onClick={() => onNavigate('home')}

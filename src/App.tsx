@@ -86,7 +86,7 @@ export function App() {
 
 
       {/* Área Principal de Conteúdo */}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col pb-24 md:pb-6">
         {currentScreen === 'home' && (
           <HomeScreen onNavigate={handleNavigate} />
         )}
@@ -121,11 +121,11 @@ export function App() {
         )}
       </main>
 
-      {/* Rodapé Fixo no Celular para Navegação Rápida com o Polegar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#111111] text-white border-t-2 border-[#FFD100] px-4 py-2 flex items-center justify-around z-30 shadow-lg no-print">
+      {/* Rodapé Fixo no Celular (Otimizado para iPhone Pro/Max Notch e Android) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#111111]/95 backdrop-blur-md text-white border-t-2 border-[#FFD100] px-3 pt-2 safe-bottom flex items-center justify-around z-30 shadow-2xl select-none no-print">
         <button
           onClick={() => handleNavigate('home')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold ${
+          className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-2 transition-colors active:scale-95 ${
             currentScreen === 'home' ? 'text-[#FFD100]' : 'text-gray-400'
           }`}
         >
@@ -134,18 +134,18 @@ export function App() {
 
         <button
           onClick={() => handleNavigate('new')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-black ${
+          className={`flex flex-col items-center gap-1 text-[11px] font-black py-1 px-2 transition-transform active:scale-95 ${
             currentScreen === 'new' ? 'text-[#FFD100]' : 'text-gray-300'
           }`}
         >
-          <span className="bg-[#FFD100] text-black px-2.5 py-0.5 rounded-full text-xs font-black">
+          <span className="bg-[#FFD100] text-black px-2.5 py-0.5 rounded-full text-xs font-black shadow-xs">
             + NOVO
           </span>
         </button>
 
         <button
           onClick={() => handleNavigate('scan')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold ${
+          className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-2 transition-colors active:scale-95 ${
             currentScreen === 'scan' ? 'text-[#FFD100]' : 'text-gray-400'
           }`}
         >
@@ -154,16 +154,16 @@ export function App() {
 
         <button
           onClick={() => handleNavigate('list')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold ${
+          className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-2 transition-colors active:scale-95 ${
             currentScreen === 'list' ? 'text-[#FFD100]' : 'text-gray-400'
           }`}
         >
-          <span>Patrimônios</span>
+          <span>Itens</span>
         </button>
 
         <button
           onClick={() => handleNavigate('config')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold ${
+          className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-2 transition-colors active:scale-95 ${
             currentScreen === 'config' ? 'text-[#FFD100]' : 'text-gray-400'
           }`}
         >
@@ -172,7 +172,7 @@ export function App() {
 
         <button
           onClick={handleLogout}
-          className="flex flex-col items-center gap-1 text-[11px] font-bold text-gray-400 hover:text-red-400"
+          className="flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-2 text-gray-400 hover:text-red-400 active:scale-95"
           title="Sair do sistema"
         >
           <span>Sair</span>
@@ -181,6 +181,7 @@ export function App() {
     </div>
   );
 }
+
 
 
 export default App;
