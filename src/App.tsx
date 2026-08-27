@@ -9,6 +9,7 @@ import { ConferenciaScreen } from './screens/ConferenciaScreen';
 import { SetoresScreen } from './screens/SetoresScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { ComprovantePublicoScreen } from './screens/ComprovantePublicoScreen';
+import { AdminAuthModal } from './components/AdminAuthModal';
 import { getSupabase } from './services/supabase';
 import type { UserRole } from './types/patrimonio';
 
@@ -31,6 +32,7 @@ export function App() {
   const [userRole, setUserRole] = useState<UserRole>(() => {
     return (localStorage.getItem('mp_user_role') as UserRole) || 'admin';
   });
+  const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false);
   const [scanInitialCode, setScanInitialCode] = useState<string>('');
 
   useEffect(() => {
@@ -51,9 +53,19 @@ export function App() {
   };
 
   const handleToggleRole = () => {
-    const nextRole: UserRole = userRole === 'admin' ? 'operador' : 'admin';
-    setUserRole(nextRole);
-    localStorage.setItem('mp_user_role', nextRole);
+    if (userRole === 'admin') {
+      // Admin pode alternar livremente para Operador
+      setUserRole('operador');
+      localStorage.setItem('mp_user_role', 'operador');
+    } else {
+      // Operador NÃO PODE mudar direto para Admin: exige senha mestre
+      setIsAdminAuthModalOpen(true);
+    }
+  };
+
+  const handleUnlockAdminSuccess = () => {
+    setUserRole('admin');
+    localStorage.setItem('mp_user_role', 'admin');
   };
 
   const handleLoginSuccess = (email: string) => {
@@ -239,9 +251,17 @@ export function App() {
           <span>Sair</span>
         </button>
       </div>
+
+      {/* Modal de Desbloqueio de Administrador por Senha */}
+      <AdminAuthModal
+        isOpen={isAdminAuthModalOpen}
+        onClose={() => setIsAdminAuthModalOpen(false)}
+        onSuccess={handleUnlockAdminSuccess}
+      />
     </div>
   );
 }
+
 
 export default App;
 

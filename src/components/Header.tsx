@@ -1,5 +1,6 @@
-import { Search, PlusCircle, List, Settings, LogOut, ClipboardCheck, Building2, Shield, User } from 'lucide-react';
+import { Search, PlusCircle, List, Settings, LogOut, ClipboardCheck, Building2, Shield, Lock } from 'lucide-react';
 import type { UserRole } from '../types/patrimonio';
+
 
 interface HeaderProps {
   currentScreen: 'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia' | 'setores';
@@ -140,11 +141,15 @@ export const Header: React.FC<HeaderProps> = ({
           {onToggleRole && (
             <button
               onClick={onToggleRole}
-              title={`Perfil atual: ${userRole.toUpperCase()}. Clique para alternar.`}
+              title={
+                userRole === 'admin'
+                  ? 'Perfil Administrador (Acesso Total). Clique para alternar para Operador.'
+                  : 'Perfil Operador (Acesso Restrito). Clique para desbloquear com senha mestre de Administrador.'
+              }
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                 userRole === 'admin'
                   ? 'bg-gradient-to-r from-[#FFD100] to-[#F59E0B] text-black shadow-md shadow-[#FFD100]/20 hover:opacity-90'
-                  : 'bg-neutral-800 hover:bg-neutral-700 text-blue-300 border border-neutral-700'
+                  : 'bg-neutral-800 hover:bg-neutral-700 text-amber-300 border border-amber-500/40'
               }`}
             >
               {userRole === 'admin' ? (
@@ -154,12 +159,13 @@ export const Header: React.FC<HeaderProps> = ({
                 </>
               ) : (
                 <>
-                  <User className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Operador</span>
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Operador 🔒</span>
                 </>
               )}
             </button>
           )}
+
 
           {userEmail && (
             <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-neutral-900/90 rounded-xl border border-neutral-800 text-xs text-neutral-300 font-medium">
