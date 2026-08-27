@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, Printer, ArrowLeft, Eye, RefreshCw, Plus, Package, CheckSquare, Square, Layers } from 'lucide-react';
+import { Search, Printer, ArrowLeft, Eye, RefreshCw, Plus, Package, CheckSquare, Square, Layers, FileText } from 'lucide-react';
 import { getAllPatrimonios, searchPatrimonios } from '../services/patrimonioService';
 import type { Patrimonio } from '../types/patrimonio';
 import { PrintModal } from '../components/PrintModal';
 import { BatchPrintModal } from '../components/BatchPrintModal';
+import { TermoResponsabilidadeModal } from '../components/TermoResponsabilidadeModal';
 
 interface PatrimoniosListScreenProps {
   onBack: () => void;
@@ -20,9 +21,11 @@ export const PatrimoniosListScreen: React.FC<PatrimoniosListScreenProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedForPrint, setSelectedForPrint] = useState<Patrimonio | null>(null);
+  const [selectedForTermo, setSelectedForTermo] = useState<Patrimonio | null>(null);
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
   const [isBatchPrintOpen, setIsBatchPrintOpen] = useState(false);
   const [batchPrintItems, setBatchPrintItems] = useState<Patrimonio[]>([]);
+
 
   useEffect(() => {
     loadItems();
@@ -280,23 +283,32 @@ export const PatrimoniosListScreen: React.FC<PatrimoniosListScreenProps> = ({
                       </td>
 
                       <td className="py-3.5 px-4 sm:px-6 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => onConsultar(item.codigo)}
                             title="Consultar"
-                            className="bg-gray-100 hover:bg-black hover:text-white text-gray-800 text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                            className="bg-gray-100 hover:bg-black hover:text-white text-gray-800 text-xs font-bold py-1.5 px-2.5 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Consultar</span>
+                            <span className="hidden sm:inline">Ver</span>
+                          </button>
+
+                          <button
+                            onClick={() => setSelectedForTermo(item)}
+                            title="Gerar Termo de Responsabilidade em PDF"
+                            className="bg-neutral-900 hover:bg-neutral-800 text-[#FFD100] text-xs font-bold py-1.5 px-2.5 rounded-lg flex items-center gap-1 transition-colors cursor-pointer border border-neutral-700"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Termo PDF</span>
                           </button>
 
                           <button
                             onClick={() => setSelectedForPrint(item)}
                             title="Imprimir etiqueta"
-                            className="bg-[#FFD100] hover:bg-[#E5BC00] text-black text-xs font-black py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                            className="bg-[#FFD100] hover:bg-[#E5BC00] text-black text-xs font-black py-1.5 px-2.5 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
                           >
                             <Printer className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Imprimir</span>
+                            <span className="hidden sm:inline">Etiqueta</span>
                           </button>
                         </div>
                       </td>
@@ -350,6 +362,15 @@ export const PatrimoniosListScreen: React.FC<PatrimoniosListScreenProps> = ({
         />
       )}
 
+      {/* Modal de Termo Oficial em PDF */}
+      {selectedForTermo && (
+        <TermoResponsabilidadeModal
+          isOpen={Boolean(selectedForTermo)}
+          onClose={() => setSelectedForTermo(null)}
+          patrimonio={selectedForTermo}
+        />
+      )}
+
       {/* Modal de Impressão em Lote */}
       <BatchPrintModal
         isOpen={isBatchPrintOpen}
@@ -359,5 +380,6 @@ export const PatrimoniosListScreen: React.FC<PatrimoniosListScreenProps> = ({
     </div>
   );
 };
+
 
 

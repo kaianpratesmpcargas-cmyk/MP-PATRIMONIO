@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
   Camera, 
@@ -28,6 +28,8 @@ import type { Patrimonio, HistoricoEvento, UserRole } from '../types/patrimonio'
 import { BarcodeLabel } from '../components/BarcodeLabel';
 import { PrintModal } from '../components/PrintModal';
 import { CameraScannerModal } from '../components/CameraScannerModal';
+import { TermoResponsabilidadeModal } from '../components/TermoResponsabilidadeModal';
+import { FileText } from 'lucide-react';
 
 interface ScanSearchScreenProps {
   onBack: () => void;
@@ -50,7 +52,9 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
   const [hasSearched, setHasSearched] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isTermoModalOpen, setIsTermoModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
 
   // Modal WhatsApp
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
@@ -314,33 +318,42 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
               </div>
             </div>
 
-            {/* Botões de Ação com WhatsApp */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Botões de Ação: Etiqueta, Termo PDF, WhatsApp, Nova Consulta */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <button
                 onClick={() => setIsPrintModalOpen(true)}
-                className="bg-[#FFD100] hover:bg-[#E5BC00] active:scale-[0.99] text-black font-black text-sm py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                className="bg-[#FFD100] hover:bg-[#E5BC00] active:scale-[0.99] text-black font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
               >
-                <Printer className="w-5 h-5" />
-                IMPRIMIR
+                <Printer className="w-4 h-4" />
+                <span>ETIQUETA</span>
+              </button>
+
+              <button
+                onClick={() => setIsTermoModalOpen(true)}
+                className="bg-neutral-900 hover:bg-black active:scale-[0.99] text-[#FFD100] font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer border border-neutral-800"
+              >
+                <FileText className="w-4 h-4 text-[#FFD100]" />
+                <span>TERMO PDF</span>
               </button>
 
               <button
                 onClick={() => setIsWhatsAppModalOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-sm py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                className="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
               >
-                <MessageSquareShare className="w-5 h-5 text-emerald-100" />
-                <span>COMPROVANTE WHATSAPP</span>
+                <MessageSquareShare className="w-4 h-4 text-emerald-100" />
+                <span>WHATSAPP</span>
               </button>
 
               <button
                 onClick={handleNewSearch}
-                className="bg-gray-900 hover:bg-black text-white font-bold text-sm py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-bold text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
-                NOVA CONSULTA
+                <span>NOVA BUSCA</span>
               </button>
             </div>
           </div>
+
 
           {/* HISTÓRICO DE MOVIMENTAÇÕES (LINHA DO TEMPO) */}
           <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-6 sm:p-8 animate-in fade-in duration-200">
@@ -731,6 +744,15 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
         />
       )}
 
+      {/* Modal de Comprovante Oficial / Termo de Cautela PDF */}
+      {foundPatrimonio && isTermoModalOpen && (
+        <TermoResponsabilidadeModal
+          isOpen={isTermoModalOpen}
+          onClose={() => setIsTermoModalOpen(false)}
+          patrimonio={foundPatrimonio}
+        />
+      )}
+
       {/* Modal de Leitura por Câmera */}
       {isCameraOpen && (
         <CameraScannerModal
@@ -742,3 +764,4 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
     </div>
   );
 };
+
