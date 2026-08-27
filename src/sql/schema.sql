@@ -104,4 +104,25 @@ ON public.historico_patrimonio FOR ALL
 USING (true)
 WITH CHECK (true);
 
+-- 9. Tabela de Heartbeat & Keep-Alive (Impede pausa por inatividade no Supabase)
+CREATE TABLE IF NOT EXISTS public.sistema_heartbeat (
+    id INT PRIMARY KEY DEFAULT 1,
+    ultimo_ping TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    status TEXT DEFAULT 'ONLINE'
+);
+
+INSERT INTO public.sistema_heartbeat (id, ultimo_ping, status)
+VALUES (1, now(), 'ONLINE')
+ON CONFLICT (id) DO UPDATE 
+SET ultimo_ping = now(), status = 'ONLINE';
+
+ALTER TABLE public.sistema_heartbeat ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir leitura do heartbeat" ON public.sistema_heartbeat;
+CREATE POLICY "Permitir leitura do heartbeat"
+ON public.sistema_heartbeat FOR ALL
+USING (true)
+WITH CHECK (true);
+
+
 
