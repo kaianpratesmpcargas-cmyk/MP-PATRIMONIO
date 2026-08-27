@@ -21,7 +21,8 @@ import {
   getPatrimonioByCodigo, 
   updatePatrimonio, 
   getHistoricoPatrimonio, 
-  formatCodeInput 
+  formatCodeInput,
+  searchPatrimonios 
 } from '../services/patrimonioService';
 import { enviarTermoDiretoWhatsApp } from '../services/pdfService';
 import type { Patrimonio, HistoricoEvento, UserRole } from '../types/patrimonio';
@@ -31,7 +32,7 @@ import { BarcodeLabel } from '../components/BarcodeLabel';
 import { PrintModal } from '../components/PrintModal';
 import { CameraScannerModal } from '../components/CameraScannerModal';
 import { TermoResponsabilidadeModal } from '../components/TermoResponsabilidadeModal';
-import { FileText } from 'lucide-react';
+import { FileText, ChevronRight, Boxes } from 'lucide-react';
 
 interface ScanSearchScreenProps {
   onBack: () => void;
@@ -50,6 +51,7 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
   const [searchedCode, setSearchedCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [foundPatrimonio, setFoundPatrimonio] = useState<Patrimonio | null>(null);
+  const [multipleResults, setMultipleResults] = useState<Patrimonio[]>([]);
   const [historicoList, setHistoricoList] = useState<HistoricoEvento[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -77,10 +79,10 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (!foundPatrimonio && !hasSearched) {
+    if (!foundPatrimonio && !hasSearched && multipleResults.length === 0) {
       inputRef.current?.focus();
     }
-  }, [foundPatrimonio, hasSearched]);
+  }, [foundPatrimonio, hasSearched, multipleResults]);
 
   useEffect(() => {
     if (initialCode) {
@@ -88,30 +90,63 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
     }
   }, [initialCode]);
 
-  const handleSearch = async (codeToSearch: string) => {
-    const raw = codeToSearch.trim();
+  const handleSelectPatrimonio = async (item: Patrimonio) => {
+    setFoundPatrimonio(item);
+    setMultipleResults([]);
+    setIsLoading(true);
+    try {
+      const hist = await getHistoricoPatrimonio(item.codigo);
+      setHistoricoList(hist);
+    } catch (err) {
+      console.warn('Erro ao carregar histórico:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = async (termToSearch: string) => {
+    const raw = termToSearch.trim();
     if (!raw) return;
 
     setIsLoading(true);
     setErrorMessage(null);
     setHasSearched(true);
     setSearchedCode(raw);
+    setMultipleResults([]);
+    setFoundPatrimonio(null);
+    setHistoricoList([]);
 
     try {
-      const result = await getPatrimonioByCodigo(raw);
-      setFoundPatrimonio(result);
-
-      if (result) {
-        const hist = await getHistoricoPatrimonio(result.codigo);
+      // 1. Tenta primeiro busca exata pelo código (ex: MP-000001 ou 1)
+      const exactResult = await getPatrimonioByCodigo(raw);
+      if (exactResult) {
+        setFoundPatrimonio(exactResult);
+        const hist = await getHistoricoPatrimonio(exactResult.codigo);
         setHistoricoList(hist);
+        return;
+      }
+
+      // 2. Se não for código exato, busca ampla por Nome / Descrição / Responsável / Setor
+      const searchResults = await searchPatrimonios(raw);
+
+      if (searchResults.length === 1) {
+        // Exatamente 1 encontrado: abre direto
+        setFoundPatrimonio(searchResults[0]);
+        const hist = await getHistoricoPatrimonio(searchResults[0].codigo);
+        setHistoricoList(hist);
+      } else if (searchResults.length > 1) {
+        // Múltiplos encontrados: exibe lista com cards
+        setMultipleResults(searchResults);
       } else {
-        setHistoricoList([]);
+        // Nenhum encontrado
+        setFoundPatrimonio(null);
+        setMultipleResults([]);
       }
     } catch (err: any) {
       console.error('Erro na consulta:', err);
       setErrorMessage(err.message || 'Erro ao consultar banco de dados.');
       setFoundPatrimonio(null);
-      setHistoricoList([]);
+      setMultipleResults([]);
     } finally {
       setIsLoading(false);
     }
@@ -133,6 +168,7 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
     setSearchInput('');
     setSearchedCode('');
     setFoundPatrimonio(null);
+    setMultipleResults([]);
     setHistoricoList([]);
     setHasSearched(false);
     setErrorMessage(null);
@@ -426,19 +462,89 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
         </div>
       )}
 
-      {/* ESTADO 2: NÃO ENCONTRADO */}
-      {hasSearched && !foundPatrimonio && !isLoading && (
+      {/* ESTADO 2: MÚLTIPLOS RESULTADOS ENCONTRADOS (BUSCA POR NOME / DESCRIÇÃO / RESPONSÁVEL) */}
+      {hasSearched && !foundPatrimonio && multipleResults.length > 0 && (
+        <div className="bg-white rounded-3xl shadow-xl border border-neutral-200 p-6 sm:p-8 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-neutral-100 gap-3 mb-6">
+            <div>
+              <span className="text-xs font-black uppercase text-amber-600 tracking-wider flex items-center gap-1.5">
+                <Boxes className="w-4 h-4" />
+                <span>Resultados da Pesquisa por Nome</span>
+              </span>
+              <h2 className="text-2xl font-black text-neutral-900 mt-0.5">
+                {multipleResults.length} {multipleResults.length === 1 ? 'patrimônio encontrado' : 'patrimônios encontrados'} para "{searchedCode}"
+              </h2>
+            </div>
+
+            <button
+              onClick={handleNewSearch}
+              className="bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs py-2.5 px-4 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Nova Busca</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {multipleResults.map((item) => (
+              <div
+                key={item.id || item.codigo}
+                onClick={() => handleSelectPatrimonio(item)}
+                className="group bg-neutral-50 hover:bg-white p-5 rounded-2xl border-2 border-neutral-200 hover:border-black hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-mono font-black text-sm text-black bg-[#FFD100] px-2.5 py-0.5 rounded-lg shadow-xs">
+                      {item.codigo}
+                    </span>
+                    <span
+                      className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                        item.status === 'Ativo'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : item.status === 'Em Manutenção'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  </div>
+
+                  <h4 className="font-black text-base text-neutral-900 group-hover:text-black line-clamp-2">
+                    {item.descricao}
+                  </h4>
+
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500 mt-2">
+                    {item.setor && <span>🏢 {item.setor}</span>}
+                    {item.localizacao && <span>📍 {item.localizacao}</span>}
+                    {item.responsavel && <span>👤 {item.responsavel}</span>}
+                    {item.numero_serie && <span className="font-mono">SN: {item.numero_serie}</span>}
+                  </div>
+                </div>
+
+                <div className="pt-3 mt-3 border-t border-neutral-200/80 flex items-center justify-end text-xs font-black text-neutral-800 group-hover:text-black transition-colors">
+                  <span>Abrir Ficha & Etiqueta</span>
+                  <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ESTADO 3: NÃO ENCONTRADO */}
+      {hasSearched && !foundPatrimonio && multipleResults.length === 0 && !isLoading && (
         <div className="bg-white rounded-3xl shadow-xl border border-red-200 p-6 sm:p-10 text-center animate-in fade-in duration-200">
           <div className="w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-9 h-9" />
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
-            Patrimônio não encontrado
+            Nenhum patrimônio encontrado
           </h2>
 
           <p className="text-sm text-gray-500 mb-4">
-            Código pesquisado:
+            Termo pesquisado:
           </p>
 
           <div className="inline-block bg-gray-100 border border-gray-300 px-6 py-2 rounded-xl mb-8">
@@ -469,7 +575,7 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
         </div>
       )}
 
-      {/* ESTADO 3: FORMULÁRIO DE BIPAGEM / PESQUISA */}
+      {/* ESTADO 4: FORMULÁRIO DE BIPAGEM / PESQUISA POR NOME OU CÓDIGO */}
       {!hasSearched && (
         <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-6 sm:p-8">
           <div className="flex items-center gap-3 pb-6 border-b border-gray-100 mb-6">
@@ -481,7 +587,7 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
                 Consultar Patrimônio
               </h1>
               <p className="text-xs text-gray-500 font-medium">
-                Bipe com leitor USB ou use a câmera do celular
+                Pesquise por nome do bem, código MP-, responsável, setor ou bipe com leitor/câmera
               </p>
             </div>
           </div>
@@ -495,24 +601,24 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
           <div className="space-y-6">
             <div>
               <label className="block text-xs font-black uppercase tracking-wider text-gray-800 mb-2">
-                Código de Barras ou Número do Patrimônio
+                Nome do Bem, Descrição, Responsável ou Código de Barras
               </label>
 
               <div className="relative">
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Bipe com o leitor ou digite o código (ex: MP-000001)..."
+                  placeholder="Ex: Notebook Dell, Mesa, Cadeira, Carlos, MP-000001..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-black focus:outline-none focus:ring-4 focus:ring-[#FFD100]/40 text-lg font-mono font-bold bg-gray-50/50 shadow-inner"
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-black focus:outline-none focus:ring-4 focus:ring-[#FFD100]/40 text-lg font-bold bg-gray-50/50 shadow-inner"
                 />
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
               </div>
 
               <p className="text-xs text-gray-500 mt-2 font-medium">
-                💡 <strong>Dica:</strong> Pistolas de código de barras USB disparam a busca automaticamente ao bipar.
+                💡 <strong>Dica:</strong> Você pode digitar palavras como <em>"Notebook"</em>, <em>"Mesa"</em> ou bipar diretamente com o leitor USB.
               </p>
             </div>
 
@@ -524,7 +630,7 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
                 className="bg-black hover:bg-gray-800 active:scale-[0.99] text-white font-black text-base py-4 px-6 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 <Search className="w-5 h-5 text-[#FFD100]" />
-                {isLoading ? 'Consultando...' : 'CONSULTAR CÓDIGO'}
+                {isLoading ? 'Pesquisando...' : 'BUSCAR PATRIMÔNIO'}
               </button>
 
               <button
@@ -539,6 +645,7 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
           </div>
         </div>
       )}
+
 
       {/* MODAL ENVIAR NO WHATSAPP */}
       {isWhatsAppModalOpen && foundPatrimonio && (

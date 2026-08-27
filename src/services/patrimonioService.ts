@@ -174,7 +174,7 @@ export async function getPatrimonioByCodigo(codigo: string): Promise<Patrimonio 
 }
 
 /**
- * Pesquisa patrimônios por termo (código, descrição ou número de série)
+ * Pesquisa patrimônios por termo (nome/descrição, código, responsável, setor, localização ou número de série)
  */
 export async function searchPatrimonios(term: string): Promise<Patrimonio[]> {
   const supabase = getSupabase();
@@ -192,7 +192,9 @@ export async function searchPatrimonios(term: string): Promise<Patrimonio[]> {
   const { data, error } = await supabase
     .from('patrimonios')
     .select('*')
-    .or(`codigo.ilike.%${cleanTerm}%,codigo.ilike.%${formattedCode}%,descricao.ilike.%${cleanTerm}%,numero_serie.ilike.%${cleanTerm}%`)
+    .or(
+      `codigo.ilike.%${cleanTerm}%,codigo.ilike.%${formattedCode}%,descricao.ilike.%${cleanTerm}%,responsavel.ilike.%${cleanTerm}%,setor.ilike.%${cleanTerm}%,localizacao.ilike.%${cleanTerm}%,categoria.ilike.%${cleanTerm}%,numero_serie.ilike.%${cleanTerm}%`
+    )
     .order('created_at', { ascending: false })
     .limit(100);
 
@@ -202,6 +204,7 @@ export async function searchPatrimonios(term: string): Promise<Patrimonio[]> {
 
   return (data as Patrimonio[]) || [];
 }
+
 
 /**
  * Lista todos os patrimônios cadastrados
