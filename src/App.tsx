@@ -6,16 +6,21 @@ import { ScanSearchScreen } from './screens/ScanSearchScreen';
 import { PatrimoniosListScreen } from './screens/PatrimoniosListScreen';
 import { ConfigScreen } from './screens/ConfigScreen';
 import { ConferenciaScreen } from './screens/ConferenciaScreen';
+import { SetoresScreen } from './screens/SetoresScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { getSupabase } from './services/supabase';
+import type { UserRole } from './types/patrimonio';
 
 export function App() {
-  const [currentScreen, setCurrentScreen] = useState<'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia'>('home');
+  const [currentScreen, setCurrentScreen] = useState<'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia' | 'setores'>('home');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return Boolean(localStorage.getItem('mp_user_email'));
   });
   const [userEmail, setUserEmail] = useState<string | null>(() => {
     return localStorage.getItem('mp_user_email');
+  });
+  const [userRole, setUserRole] = useState<UserRole>(() => {
+    return (localStorage.getItem('mp_user_role') as UserRole) || 'admin';
   });
   const [scanInitialCode, setScanInitialCode] = useState<string>('');
 
@@ -34,6 +39,12 @@ export function App() {
         localStorage.setItem('mp_user_email', email);
       }
     }
+  };
+
+  const handleToggleRole = () => {
+    const nextRole: UserRole = userRole === 'admin' ? 'operador' : 'admin';
+    setUserRole(nextRole);
+    localStorage.setItem('mp_user_role', nextRole);
   };
 
   const handleLoginSuccess = (email: string) => {
@@ -62,7 +73,7 @@ export function App() {
     setCurrentScreen('scan');
   };
 
-  const handleNavigate = (screen: 'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia') => {
+  const handleNavigate = (screen: 'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia' | 'setores') => {
     if (screen !== 'scan') {
       setScanInitialCode('');
     }
@@ -76,21 +87,23 @@ export function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#111111] antialiased">
-      {/* Topo / Header da MP CARGAS com Botão Sair */}
+      {/* Topo / Header da MP CARGAS com Perfil Admin/Operador e Sair */}
       <Header
         currentScreen={currentScreen}
         onNavigate={handleNavigate}
         userEmail={userEmail}
         onLogout={handleLogout}
+        userRole={userRole}
+        onToggleRole={handleToggleRole}
       />
 
       {/* Área Principal de Conteúdo */}
       <main className="flex-1 flex flex-col pb-24 md:pb-6">
         {currentScreen === 'home' && (
-          <HomeScreen onNavigate={handleNavigate} />
+          <HomeScreen onNavigate={handleNavigate} userRole={userRole} />
         )}
 
-        {currentScreen === 'new' && (
+        {currentScreen === 'new' && userRole === 'admin' && (
           <NewPatrimonioScreen
             onBack={() => handleNavigate('home')}
             onNavigateToScan={() => handleNavigate('scan')}
@@ -102,12 +115,21 @@ export function App() {
             onBack={() => handleNavigate('home')}
             onNavigateToNew={() => handleNavigate('new')}
             initialCode={scanInitialCode}
+            userRole={userRole}
           />
         )}
 
         {currentScreen === 'conferencia' && (
           <ConferenciaScreen
             onBack={() => handleNavigate('home')}
+          />
+        )}
+
+        {currentScreen === 'setores' && (
+          <SetoresScreen
+            onBack={() => handleNavigate('home')}
+            onConsultar={handleConsultarFromList}
+            userRole={userRole}
           />
         )}
 
@@ -119,7 +141,7 @@ export function App() {
           />
         )}
 
-        {currentScreen === 'config' && (
+        {currentScreen === 'config' && userRole === 'admin' && (
           <ConfigScreen
             onBack={() => handleNavigate('home')}
           />
@@ -137,16 +159,18 @@ export function App() {
           <span>Início</span>
         </button>
 
-        <button
-          onClick={() => handleNavigate('new')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-black py-1 px-1.5 transition-transform active:scale-95 ${
-            currentScreen === 'new' ? 'text-[#FFD100]' : 'text-gray-300'
-          }`}
-        >
-          <span className="bg-[#FFD100] text-black px-2 py-0.5 rounded-full text-[11px] font-black shadow-xs">
-            + NOVO
-          </span>
-        </button>
+        {userRole === 'admin' && (
+          <button
+            onClick={() => handleNavigate('new')}
+            className={`flex flex-col items-center gap-1 text-[10px] font-black py-1 px-1.5 transition-transform active:scale-95 ${
+              currentScreen === 'new' ? 'text-[#FFD100]' : 'text-gray-300'
+            }`}
+          >
+            <span className="bg-[#FFD100] text-black px-2 py-0.5 rounded-full text-[11px] font-black shadow-xs">
+              + NOVO
+            </span>
+          </button>
+        )}
 
         <button
           onClick={() => handleNavigate('conferencia')}
@@ -167,21 +191,21 @@ export function App() {
         </button>
 
         <button
+          onClick={() => handleNavigate('setores')}
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold py-1 px-1.5 transition-colors active:scale-95 ${
+            currentScreen === 'setores' ? 'text-[#FFD100]' : 'text-gray-400'
+          }`}
+        >
+          <span>Setores</span>
+        </button>
+
+        <button
           onClick={() => handleNavigate('list')}
           className={`flex flex-col items-center gap-1 text-[10px] font-bold py-1 px-1.5 transition-colors active:scale-95 ${
             currentScreen === 'list' ? 'text-[#FFD100]' : 'text-gray-400'
           }`}
         >
           <span>Itens</span>
-        </button>
-
-        <button
-          onClick={() => handleNavigate('config')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold py-1 px-1.5 transition-colors active:scale-95 ${
-            currentScreen === 'config' ? 'text-[#FFD100]' : 'text-gray-400'
-          }`}
-        >
-          <span>Ajustes</span>
         </button>
 
         <button
@@ -197,6 +221,7 @@ export function App() {
 }
 
 export default App;
+
 
 
 

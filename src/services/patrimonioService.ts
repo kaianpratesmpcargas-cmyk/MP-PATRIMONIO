@@ -515,5 +515,101 @@ export async function getHistoricoPatrimonio(codigo: string): Promise<any[]> {
   }
 }
 
+/**
+ * Agrupa todos os patrimônios por Setor para o Painel Visual de Setores e Salas
+ */
+export async function getPatrimoniosGroupedBySetor(): Promise<{
+  setores: {
+    nome: string;
+    total: number;
+    ativos: number;
+    manutencao: number;
+    baixados: number;
+    itens: Patrimonio[];
+  }[];
+  totalGeral: number;
+}> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    throw new Error('Supabase não conectado.');
+  }
+
+  const { data, error } = await supabase
+    .from('patrimonios')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message || 'Erro ao carregar setores.');
+  }
+
+  const allItens: Patrimonio[] = data || [];
+  const mapSetores = new Map<string, Patrimonio[]>();
+
+  for (const item of allItens) {
+    const setorNome = (item.setor && item.setor.trim()) ? item.setor.trim() : 'Sem Setor Definido';
+    if (!mapSetores.has(setorNome)) {
+      mapSetores.set(setorNome, []);
+    }
+    mapSetores.get(setorNome)!.push(item);
+  }
+
+  const setoresResumo = Array.from(mapSetores.entries()).map(([nome, itens]) => {
+    return {
+      nome,
+      total: itens.length,
+      ativos: itens.filter((i) => i.status === 'Ativo').length,
+      manutencao: itens.filter((i) => i.status === 'Em Manutenção').length,
+      baixados: itens.filter((i) => i.status === 'Baixado' || i.status === 'Avariado').length,
+      itens,
+    };
+  });
+
+  // Ordena por quantidade de itens (decrescente)
+  setoresResumo.sort((a, b) => b.total - a.total);
+
+  return {
+    setores: setoresResumo,
+    totalGeral: allItens.length,
+  };
+}
+
+/**
+ * Gera o link do WhatsApp para envio do Comprovante de Entrega do Patrimônio
+ */
+export function generateWhatsAppComprovanteLink(item: Patrimonio, telefoneDestinatario?: string): string {
+  const dataHoje = new Date().toLocaleDateString('pt-BR');
+  const horaHoje = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  const saudacaoNome = item.responsavel ? `Olá *${item.responsavel}*,` : 'Olá,';
+
+  const texto = 
+`${saudacaoNome}
+
+📦 *COMPROVANTE DE ENTREGA DE PATRIMÔNIO*
+🏢 *MP CARGAS*
+
+Confirmamos a atribuição do seguinte bem sob sua responsabilidade:
+
+🔹 *Código:* \`${item.codigo}\`
+🔹 *Descrição:* *${item.descricao}*
+🔹 *Setor / Local:* ${[item.setor, item.localizacao].filter(Boolean).join(' • ') || 'Não especificado'}
+${item.numero_serie ? `🔹 *Nº de Série:* \`${item.numero_serie}\`\n` : ''}🔹 *Status:* ${item.status || 'Ativo'}
+📅 *Data:* ${dataHoje} às ${horaHoje}
+
+_Por favor, zele pela integridade do equipamento. Em caso de defeito ou transferência, comunique o setor responsável._`;
+
+  const textoEncoded = encodeURIComponent(texto);
+
+  if (telefoneDestinatario && telefoneDestinatario.trim()) {
+    const numLimpo = telefoneDestinatario.replace(/\D/g, '');
+    const numFinal = numLimpo.startsWith('55') ? numLimpo : `55${numLimpo}`;
+    return `https://wa.me/${numFinal}?text=${textoEncoded}`;
+  }
+
+  return `https://wa.me/?text=${textoEncoded}`;
+}
+
+
 
 

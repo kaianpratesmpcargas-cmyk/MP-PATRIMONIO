@@ -28,9 +28,21 @@ export interface HistoricoEvento {
   criado_em?: string;
 }
 
+export type UserRole = 'admin' | 'operador';
+
+export interface SetorResumo {
+  setor: string;
+  total: number;
+  ativos: number;
+  manutencao: number;
+  baixados: number;
+  itens: Patrimonio[];
+}
+
 export interface SupabaseConfig {
   url: string;
   anonKey: string;
 }
+
 
 

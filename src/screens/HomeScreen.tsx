@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { PlusCircle, Search, PackageCheck, List, ArrowRight, ClipboardCheck } from 'lucide-react';
+import { PlusCircle, Search, PackageCheck, List, ArrowRight, ClipboardCheck, Building2 } from 'lucide-react';
 import { getTotalPatrimoniosCount } from '../services/patrimonioService';
+import type { UserRole } from '../types/patrimonio';
 
 interface HomeScreenProps {
-  onNavigate: (screen: 'new' | 'scan' | 'list' | 'config' | 'conferencia') => void;
+  onNavigate: (screen: 'new' | 'scan' | 'list' | 'config' | 'conferencia' | 'setores') => void;
+  userRole?: UserRole;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, userRole = 'admin' }) => {
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,25 +43,44 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
         </p>
       </div>
 
-      {/* Dois Botões Grandes Principais */}
+      {/* Botões Grandes Principais */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-2xl mb-5">
-        {/* Botão + NOVO PATRIMÔNIO */}
-        <button
-          onClick={() => onNavigate('new')}
-          className="group relative bg-[#FFD100] hover:bg-[#E5BC00] active:scale-[0.98] text-[#111111] font-black p-7 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-200 flex flex-col items-center justify-center gap-3 border-2 border-black/5 cursor-pointer min-h-[190px]"
-        >
-          <div className="w-14 h-14 rounded-2xl bg-black text-[#FFD100] flex items-center justify-center shadow-lg group-hover:scale-108 transition-transform">
-            <PlusCircle className="w-8 h-8" />
-          </div>
-          <div className="text-center">
-            <span className="block text-xl font-black uppercase tracking-wide">
-              + NOVO PATRIMÔNIO
-            </span>
-            <span className="block text-xs font-bold text-black/75 mt-0.5 tracking-normal">
-              Cadastrar 1 item ou gerar em lote
-            </span>
-          </div>
-        </button>
+        {/* Botão 1: + NOVO PATRIMÔNIO (se Admin) ou PAINEL DE SETORES (se Operador) */}
+        {userRole === 'admin' ? (
+          <button
+            onClick={() => onNavigate('new')}
+            className="group relative bg-[#FFD100] hover:bg-[#E5BC00] active:scale-[0.98] text-[#111111] font-black p-7 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-200 flex flex-col items-center justify-center gap-3 border-2 border-black/5 cursor-pointer min-h-[190px]"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-black text-[#FFD100] flex items-center justify-center shadow-lg group-hover:scale-108 transition-transform">
+              <PlusCircle className="w-8 h-8" />
+            </div>
+            <div className="text-center">
+              <span className="block text-xl font-black uppercase tracking-wide">
+                + NOVO PATRIMÔNIO
+              </span>
+              <span className="block text-xs font-bold text-black/75 mt-0.5 tracking-normal">
+                Cadastrar 1 item ou gerar em lote
+              </span>
+            </div>
+          </button>
+        ) : (
+          <button
+            onClick={() => onNavigate('setores')}
+            className="group relative bg-[#FFD100] hover:bg-[#E5BC00] active:scale-[0.98] text-[#111111] font-black p-7 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-200 flex flex-col items-center justify-center gap-3 border-2 border-black/5 cursor-pointer min-h-[190px]"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-black text-[#FFD100] flex items-center justify-center shadow-lg group-hover:scale-108 transition-transform">
+              <Building2 className="w-8 h-8" />
+            </div>
+            <div className="text-center">
+              <span className="block text-xl font-black uppercase tracking-wide">
+                SETORES & LOCAIS
+              </span>
+              <span className="block text-xs font-bold text-black/75 mt-0.5 tracking-normal">
+                Ver bens por galpão e sala
+              </span>
+            </div>
+          </button>
+        )}
 
         {/* Botão CONSULTAR / BIPAR */}
         <button
@@ -80,30 +101,48 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
         </button>
       </div>
 
-      {/* Botão Destaque de Conferência / Auditoria */}
-      <div className="w-full max-w-2xl mb-5">
+      {/* Grade de 2 Ações Rápidas: Conferência & Setores */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mb-5">
+        {/* Botão Conferência */}
         <button
           onClick={() => onNavigate('conferencia')}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white p-4 sm:p-5 rounded-3xl shadow-md hover:shadow-xl transition-all duration-150 flex items-center justify-between gap-4 cursor-pointer border border-emerald-500"
+          className="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white p-4 rounded-3xl shadow-md hover:shadow-xl transition-all flex items-center justify-between gap-3 cursor-pointer border border-emerald-500"
         >
-          <div className="flex items-center gap-3.5 text-left">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-950/40 text-emerald-200 flex items-center justify-center shrink-0">
-              <ClipboardCheck className="w-7 h-7" />
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-950/40 text-emerald-200 flex items-center justify-center shrink-0">
+              <ClipboardCheck className="w-5 h-5" />
             </div>
             <div>
-              <span className="block text-base sm:text-lg font-black uppercase tracking-wide">
-                📋 CONFERÊNCIA DE PATRIMÔNIO
+              <span className="block text-sm font-black uppercase tracking-wide">
+                📋 CONFERÊNCIA
               </span>
-              <span className="block text-xs text-emerald-100 font-medium">
-                Bipar itens, auditar funcionamento, manutenção ou dar baixa
+              <span className="block text-[11px] text-emerald-100 font-medium">
+                Auditar funcionamento & baixa
               </span>
             </div>
           </div>
+          <ArrowRight className="w-4 h-4 text-emerald-200 shrink-0" />
+        </button>
 
-          <div className="hidden sm:flex items-center gap-1 font-bold text-xs bg-emerald-700 px-3 py-1.5 rounded-xl text-emerald-100">
-            <span>Iniciar</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+        {/* Botão Setores & Locais */}
+        <button
+          onClick={() => onNavigate('setores')}
+          className="bg-gray-900 hover:bg-black active:scale-[0.99] text-white p-4 rounded-3xl shadow-md hover:shadow-xl transition-all flex items-center justify-between gap-3 cursor-pointer border border-gray-800"
+        >
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-10 h-10 rounded-2xl bg-gray-800 text-[#FFD100] flex items-center justify-center shrink-0">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="block text-sm font-black uppercase tracking-wide text-[#FFD100]">
+                🏢 MAPA DE SETORES
+              </span>
+              <span className="block text-[11px] text-gray-400 font-medium">
+                Bens por galpão e sala
+              </span>
+            </div>
           </div>
+          <ArrowRight className="w-4 h-4 text-gray-400 shrink-0" />
         </button>
       </div>
 
@@ -135,5 +174,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
     </div>
   );
 };
+
 
 

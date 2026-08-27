@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
   Camera, 
@@ -13,25 +13,34 @@ import {
   X, 
   Save, 
   History, 
-  MapPin 
+  MapPin,
+  Send,
+  MessageSquareShare
 } from 'lucide-react';
-import { getPatrimonioByCodigo, updatePatrimonio, getHistoricoPatrimonio, formatCodeInput } from '../services/patrimonioService';
-import type { Patrimonio, HistoricoEvento } from '../types/patrimonio';
+import { 
+  getPatrimonioByCodigo, 
+  updatePatrimonio, 
+  getHistoricoPatrimonio, 
+  formatCodeInput, 
+  generateWhatsAppComprovanteLink 
+} from '../services/patrimonioService';
+import type { Patrimonio, HistoricoEvento, UserRole } from '../types/patrimonio';
 import { BarcodeLabel } from '../components/BarcodeLabel';
 import { PrintModal } from '../components/PrintModal';
 import { CameraScannerModal } from '../components/CameraScannerModal';
-
 
 interface ScanSearchScreenProps {
   onBack: () => void;
   onNavigateToNew: () => void;
   initialCode?: string;
+  userRole?: UserRole;
 }
 
 export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
   onBack,
   onNavigateToNew,
   initialCode = '',
+  userRole = 'admin',
 }) => {
   const [searchInput, setSearchInput] = useState(initialCode);
   const [searchedCode, setSearchedCode] = useState('');
@@ -42,6 +51,10 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Modal WhatsApp
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [whatsAppPhone, setWhatsAppPhone] = useState('');
 
   // Estados de Edição
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -83,7 +96,6 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
       setFoundPatrimonio(result);
 
       if (result) {
-        // Carrega histórico de movimentações
         const hist = await getHistoricoPatrimonio(result.codigo);
         setHistoricoList(hist);
       } else {
@@ -123,7 +135,6 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
     }, 100);
   };
 
-  // Abrir Modal de Edição
   const handleOpenEdit = () => {
     if (!foundPatrimonio) return;
     setEditDescricao(foundPatrimonio.descricao);
@@ -137,7 +148,6 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
     setIsEditModalOpen(true);
   };
 
-  // Salvar Edição
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!foundPatrimonio || !editDescricao.trim()) return;
@@ -158,7 +168,6 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
       setFoundPatrimonio(updated);
       setIsEditModalOpen(false);
 
-      // Recarrega histórico
       const hist = await getHistoricoPatrimonio(updated.codigo);
       setHistoricoList(hist);
     } catch (err: any) {
@@ -166,6 +175,13 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
     } finally {
       setIsSavingEdit(false);
     }
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!foundPatrimonio) return;
+    const link = generateWhatsAppComprovanteLink(foundPatrimonio, whatsAppPhone);
+    window.open(link, '_blank');
+    setIsWhatsAppModalOpen(false);
   };
 
   return (
@@ -212,15 +228,17 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
                   {foundPatrimonio.status}
                 </span>
 
-                <button
-                  type="button"
-                  onClick={handleOpenEdit}
-                  title="Editar cadastro"
-                  className="bg-gray-900 hover:bg-black text-white text-xs font-bold py-1.5 px-3 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                >
-                  <Pencil className="w-3.5 h-3.5 text-[#FFD100]" />
-                  <span>Editar</span>
-                </button>
+                {userRole === 'admin' && (
+                  <button
+                    type="button"
+                    onClick={handleOpenEdit}
+                    title="Editar cadastro"
+                    className="bg-gray-900 hover:bg-black text-white text-xs font-bold py-1.5 px-3 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                  >
+                    <Pencil className="w-3.5 h-3.5 text-[#FFD100]" />
+                    <span>Editar</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -296,21 +314,29 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
               </div>
             </div>
 
-            {/* Botões de Ação */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            {/* Botões de Ação com WhatsApp */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 onClick={() => setIsPrintModalOpen(true)}
-                className="flex-1 bg-[#FFD100] hover:bg-[#E5BC00] active:scale-[0.99] text-black font-black text-lg py-4 px-6 rounded-2xl flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                className="bg-[#FFD100] hover:bg-[#E5BC00] active:scale-[0.99] text-black font-black text-sm py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
               >
-                <Printer className="w-6 h-6" />
-                IMPRIMIR ETIQUETA
+                <Printer className="w-5 h-5" />
+                IMPRIMIR
+              </button>
+
+              <button
+                onClick={() => setIsWhatsAppModalOpen(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-sm py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+              >
+                <MessageSquareShare className="w-5 h-5 text-emerald-100" />
+                <span>COMPROVANTE WHATSAPP</span>
               </button>
 
               <button
                 onClick={handleNewSearch}
-                className="bg-gray-900 hover:bg-black text-white font-bold text-base py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="bg-gray-900 hover:bg-black text-white font-bold text-sm py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
-                <RotateCcw className="w-5 h-5" />
+                <RotateCcw className="w-4 h-4" />
                 NOVA CONSULTA
               </button>
             </div>
@@ -346,7 +372,6 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
 
                   return (
                     <div key={item.id || idx} className="relative">
-                      {/* Ponto indicador da linha do tempo */}
                       <span className={`absolute -left-6 top-1.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
                         item.tipo === 'cadastro' ? 'bg-[#FFD100]' :
                         item.tipo === 'movimentacao' ? 'bg-blue-500' :
@@ -408,13 +433,15 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
-            <button
-              onClick={onNavigateToNew}
-              className="flex-1 bg-[#FFD100] hover:bg-[#E5BC00] text-black font-black text-base py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
-            >
-              <PlusCircle className="w-5 h-5" />
-              CADASTRAR NOVO
-            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={onNavigateToNew}
+                className="flex-1 bg-[#FFD100] hover:bg-[#E5BC00] text-black font-black text-base py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+              >
+                <PlusCircle className="w-5 h-5" />
+                CADASTRAR NOVO
+              </button>
+            )}
 
             <button
               onClick={handleNewSearch}
@@ -450,7 +477,6 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
             </div>
           )}
 
-          {/* Campo de Entrada Principal com Leitor de Código de Barras */}
           <div className="space-y-6">
             <div>
               <label className="block text-xs font-black uppercase tracking-wider text-gray-800 mb-2">
@@ -475,7 +501,6 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
               </p>
             </div>
 
-            {/* Botões de Ação */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <button
                 type="button"
@@ -500,8 +525,70 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
         </div>
       )}
 
+      {/* MODAL ENVIAR NO WHATSAPP */}
+      {isWhatsAppModalOpen && foundPatrimonio && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs no-print">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-gray-200 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <Send className="w-4 h-4" />
+                </div>
+                <h3 className="font-black text-base text-gray-900">
+                  Comprovante por WhatsApp
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsWhatsAppModalOpen(false)}
+                className="p-1.5 text-gray-400 hover:text-black rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-600 mb-4">
+              Envie o comprovante de entrega do patrimônio <strong>{foundPatrimonio.codigo}</strong> diretamente para o WhatsApp do responsável.
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-xs font-bold uppercase text-gray-700 mb-1">
+                WhatsApp do Responsável (com DDD)
+              </label>
+              <input
+                type="tel"
+                value={whatsAppPhone}
+                onChange={(e) => setWhatsAppPhone(e.target.value)}
+                placeholder="Ex: 11999998888 (opcional)"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm font-bold bg-white"
+              />
+              <p className="text-[10px] text-gray-400 mt-1">
+                Se deixar em branco, o WhatsApp abrirá para você escolher o contato na lista.
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleSendWhatsApp}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md cursor-pointer"
+              >
+                <Send className="w-4 h-4" />
+                ABRIR NO WHATSAPP
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsWhatsAppModalOpen(false)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs py-3 px-4 rounded-xl cursor-pointer"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MODAL DE EDIÇÃO DE CADASTRO */}
-      {isEditModalOpen && (
+      {isEditModalOpen && userRole === 'admin' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs no-print">
           <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 sm:p-8 border border-gray-200 animate-in fade-in zoom-in duration-150 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">

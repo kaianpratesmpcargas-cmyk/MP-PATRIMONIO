@@ -1,10 +1,13 @@
-import { Search, PlusCircle, List, Settings, LogOut, ClipboardCheck } from 'lucide-react';
+import { Search, PlusCircle, List, Settings, LogOut, ClipboardCheck, Building2, Shield, User } from 'lucide-react';
+import type { UserRole } from '../types/patrimonio';
 
 interface HeaderProps {
-  currentScreen: 'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia';
-  onNavigate: (screen: 'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia') => void;
+  currentScreen: 'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia' | 'setores';
+  onNavigate: (screen: 'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia' | 'setores') => void;
   userEmail?: string | null;
   onLogout?: () => void;
+  userRole?: UserRole;
+  onToggleRole?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -12,6 +15,8 @@ export const Header: React.FC<HeaderProps> = ({
   onNavigate,
   userEmail,
   onLogout,
+  userRole = 'admin',
+  onToggleRole,
 }) => {
   return (
     <header className="bg-[#111111] text-white border-b-[3px] border-[#FFD100] sticky top-0 z-40 shadow-md select-none no-print safe-top">
@@ -53,17 +58,19 @@ export const Header: React.FC<HeaderProps> = ({
             Início
           </button>
 
-          <button
-            onClick={() => onNavigate('new')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-              currentScreen === 'new'
-                ? 'bg-[#FFD100] text-black shadow-xs'
-                : 'text-gray-300 hover:text-[#FFD100] hover:bg-gray-800/60'
-            }`}
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>+ Novo</span>
-          </button>
+          {userRole === 'admin' && (
+            <button
+              onClick={() => onNavigate('new')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                currentScreen === 'new'
+                  ? 'bg-[#FFD100] text-black shadow-xs'
+                  : 'text-gray-300 hover:text-[#FFD100] hover:bg-gray-800/60'
+              }`}
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>+ Novo</span>
+            </button>
+          )}
 
           <button
             onClick={() => onNavigate('scan')}
@@ -90,6 +97,18 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           <button
+            onClick={() => onNavigate('setores')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+              currentScreen === 'setores'
+                ? 'bg-gray-800 text-[#FFD100] shadow-xs'
+                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Setores</span>
+          </button>
+
+          <button
             onClick={() => onNavigate('list')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
               currentScreen === 'list'
@@ -101,26 +120,52 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Patrimônios</span>
           </button>
 
-          <button
-            onClick={() => onNavigate('config')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-              currentScreen === 'config'
-                ? 'bg-gray-800 text-[#FFD100] shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
-            }`}
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span>Configurações</span>
-          </button>
+          {userRole === 'admin' && (
+            <button
+              onClick={() => onNavigate('config')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                currentScreen === 'config'
+                  ? 'bg-gray-800 text-[#FFD100] shadow-xs'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+              }`}
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>Configurações</span>
+            </button>
+          )}
         </nav>
 
+        {/* Lado Direito: Perfil de Acesso + Usuário Logado + Sair */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          {/* Badge / Seletor de Perfil (Admin / Operador) */}
+          {onToggleRole && (
+            <button
+              onClick={onToggleRole}
+              title={`Perfil atual: ${userRole.toUpperCase()}. Clique para alternar.`}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
+                userRole === 'admin'
+                  ? 'bg-[#FFD100] text-black border-[#E5BC00] shadow-xs'
+                  : 'bg-gray-800 text-blue-300 border-gray-700'
+              }`}
+            >
+              {userRole === 'admin' ? (
+                <>
+                  <Shield className="w-3 h-3 text-black" />
+                  <span>Admin</span>
+                </>
+              ) : (
+                <>
+                  <User className="w-3 h-3 text-blue-400" />
+                  <span>Operador</span>
+                </>
+              )}
+            </button>
+          )}
 
-        {/* Lado Direito: Usuário Logado + Sair */}
-        <div className="flex items-center gap-3 shrink-0">
           {userEmail && (
             <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-gray-900/80 rounded-lg border border-gray-800 text-[11px] text-gray-300 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
-              <span className="truncate max-w-[170px]">{userEmail}</span>
+              <span className="truncate max-w-[150px]">{userEmail}</span>
             </div>
           )}
 
@@ -139,6 +184,7 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+
 
 
 
