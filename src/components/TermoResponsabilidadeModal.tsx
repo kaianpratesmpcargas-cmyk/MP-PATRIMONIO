@@ -1,9 +1,10 @@
-import { useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import JsBarcode from 'jsbarcode';
-import { FileText, Printer, X, Send } from 'lucide-react';
+import { FileText, Printer, X, MessageSquareShare } from 'lucide-react';
 import type { Patrimonio } from '../types/patrimonio';
-import { generateWhatsAppComprovanteLink } from '../services/patrimonioService';
+import { enviarTermoDiretoWhatsApp } from '../services/pdfService';
+
 
 interface TermoResponsabilidadeModalProps {
   isOpen: boolean;
@@ -16,13 +17,13 @@ export const TermoResponsabilidadeModal: React.FC<TermoResponsabilidadeModalProp
   onClose,
   patrimonio,
 }) => {
+  const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
   const svgBarcodeRef = useRef<SVGSVGElement | null>(null);
   const svgPrintBarcodeRef = useRef<SVGSVGElement | null>(null);
 
   const dataEmissao = new Date().toLocaleDateString('pt-BR');
   const horaEmissao = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const numeroTermo = `TR-${patrimonio.codigo.replace(/[^0-9]/g, '') || '0001'}-${new Date().getFullYear()}`;
-
 
   useEffect(() => {
     if (isOpen && patrimonio.codigo) {
@@ -61,9 +62,15 @@ export const TermoResponsabilidadeModal: React.FC<TermoResponsabilidadeModalProp
     }, 100);
   };
 
-  const handleWhatsApp = () => {
-    const link = generateWhatsAppComprovanteLink(patrimonio);
-    window.open(link, '_blank');
+  const handleDirectWhatsAppPDF = async () => {
+    setIsSendingWhatsApp(true);
+    try {
+      await enviarTermoDiretoWhatsApp(patrimonio);
+    } catch (err) {
+      console.error('Erro ao enviar PDF pelo WhatsApp:', err);
+    } finally {
+      setIsSendingWhatsApp(false);
+    }
   };
 
   const printRoot = document.getElementById('mp-print-root');
@@ -84,7 +91,7 @@ export const TermoResponsabilidadeModal: React.FC<TermoResponsabilidadeModalProp
                   Comprovante Oficial / Termo de Cautela
                 </h3>
                 <p className="text-xs text-neutral-500">
-                  Documento formal de entrega para assinatura e arquivamento em PDF
+                  Envio direto do PDF no WhatsApp ou impressão
                 </p>
               </div>
             </div>
@@ -208,22 +215,23 @@ export const TermoResponsabilidadeModal: React.FC<TermoResponsabilidadeModalProp
             </div>
           </div>
 
-          {/* Botões de Ação */}
+          {/* Botões de Ação com Envio Direto ao WhatsApp */}
           <div className="pt-4 border-t border-neutral-100 flex flex-col sm:flex-row gap-3 shrink-0">
             <button
-              onClick={handlePrintPDF}
-              className="flex-1 bg-[#FFD100] hover:bg-[#E5BC00] active:scale-99 text-black font-black text-sm py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+              onClick={handleDirectWhatsAppPDF}
+              disabled={isSendingWhatsApp}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-99 text-white font-black text-sm py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer disabled:opacity-60"
             >
-              <Printer className="w-5 h-5" />
-              <span>IMPRIMIR / SALVAR COMO PDF</span>
+              <MessageSquareShare className="w-5 h-5 text-emerald-100" />
+              <span>{isSendingWhatsApp ? 'PREPARANDO PDF...' : 'ENVIAR PDF DIRETO NO WHATSAPP'}</span>
             </button>
 
             <button
-              onClick={handleWhatsApp}
-              className="bg-emerald-600 hover:bg-emerald-700 active:scale-99 text-white font-bold text-sm py-3.5 px-5 rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+              onClick={handlePrintPDF}
+              className="bg-neutral-900 hover:bg-black text-[#FFD100] font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer border border-neutral-800"
             >
-              <Send className="w-4 h-4" />
-              <span>WhatsApp</span>
+              <Printer className="w-4 h-4" />
+              <span>Imprimir</span>
             </button>
 
             <button

@@ -21,10 +21,12 @@ import {
   getPatrimonioByCodigo, 
   updatePatrimonio, 
   getHistoricoPatrimonio, 
-  formatCodeInput, 
-  generateWhatsAppComprovanteLink 
+  formatCodeInput 
 } from '../services/patrimonioService';
+import { enviarTermoDiretoWhatsApp } from '../services/pdfService';
 import type { Patrimonio, HistoricoEvento, UserRole } from '../types/patrimonio';
+
+
 import { BarcodeLabel } from '../components/BarcodeLabel';
 import { PrintModal } from '../components/PrintModal';
 import { CameraScannerModal } from '../components/CameraScannerModal';
@@ -181,12 +183,12 @@ export const ScanSearchScreen: React.FC<ScanSearchScreenProps> = ({
     }
   };
 
-  const handleSendWhatsApp = () => {
+  const handleSendWhatsApp = async () => {
     if (!foundPatrimonio) return;
-    const link = generateWhatsAppComprovanteLink(foundPatrimonio, whatsAppPhone);
-    window.open(link, '_blank');
     setIsWhatsAppModalOpen(false);
+    await enviarTermoDiretoWhatsApp(foundPatrimonio, whatsAppPhone);
   };
+
 
   return (
     <div className="flex-1 p-4 sm:p-6 max-w-4xl mx-auto w-full">
