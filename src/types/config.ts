@@ -1,3 +1,5 @@
+export type LabelTamanho = 'padrao' | 'compacto' | 'termica_50x30' | 'termica_60x40' | 'termica_100x50';
+
 export interface LabelConfig {
   empresaNome: string;
   simboloTexto: string;
@@ -5,7 +7,7 @@ export interface LabelConfig {
   codigoPrefixo: string;
   mostrarSetorLocal: boolean;
   mostrarLinhaCorte: boolean;
-  tamanho: 'padrao' | 'compacto';
+  tamanho: LabelTamanho;
   copiasPadrao: number;
 }
 
@@ -19,4 +21,5 @@ export const DEFAULT_LABEL_CONFIG: LabelConfig = {
   tamanho: 'padrao',
   copiasPadrao: 1,
 };
+
 

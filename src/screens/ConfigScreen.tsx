@@ -179,43 +179,89 @@ export const ConfigScreen: React.FC<ConfigScreenProps> = ({ onBack }) => {
             />
           </div>
 
-          {/* Tamanho da Etiqueta */}
+          {/* Tamanho da Etiqueta / Perfil de Impressora */}
           <div>
             <label className="block text-xs font-black uppercase tracking-wider text-gray-800 mb-1.5">
-              Dimensões da Etiqueta
+              Perfil da Impressora & Tamanho da Etiqueta
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => handleChange('tamanho', 'padrao')}
-                className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                className={`p-3 rounded-xl border text-xs font-bold text-left transition-all cursor-pointer ${
                   config.tamanho === 'padrao'
-                    ? 'border-black bg-black text-[#FFD100]'
+                    ? 'border-black bg-black text-[#FFD100] shadow-xs'
                     : 'border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Padrão (85 x 48 mm)
-                <span className="block text-[10px] font-normal opacity-80 mt-0.5">
-                  Ideal para A4 e Geral
+                <span className="font-black block">📄 A4 / Laser Brother (85 x 48 mm)</span>
+                <span className="block text-[10px] opacity-80 mt-0.5">
+                  Tamanho padrão para folha sulfite comum
                 </span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleChange('tamanho', 'compacto')}
-                className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                className={`p-3 rounded-xl border text-xs font-bold text-left transition-all cursor-pointer ${
                   config.tamanho === 'compacto'
-                    ? 'border-black bg-black text-[#FFD100]'
+                    ? 'border-black bg-black text-[#FFD100] shadow-xs'
                     : 'border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Compacto (70 x 40 mm)
-                <span className="block text-[10px] font-normal opacity-80 mt-0.5">
-                  Itens menores / Térmica
+                <span className="font-black block">📄 A4 Compacto (70 x 40 mm)</span>
+                <span className="block text-[10px] opacity-80 mt-0.5">
+                  Mais etiquetas por folha sulfite
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleChange('tamanho', 'termica_50x30')}
+                className={`p-3 rounded-xl border text-xs font-bold text-left transition-all cursor-pointer ${
+                  config.tamanho === 'termica_50x30'
+                    ? 'border-black bg-black text-[#FFD100] shadow-xs'
+                    : 'border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <span className="font-black block">🏷️ Térmica Zebra/Elgin (50 x 30 mm)</span>
+                <span className="block text-[10px] opacity-80 mt-0.5">
+                  Rolo adesivo direto / Mini POS
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleChange('tamanho', 'termica_60x40')}
+                className={`p-3 rounded-xl border text-xs font-bold text-left transition-all cursor-pointer ${
+                  config.tamanho === 'termica_60x40'
+                    ? 'border-black bg-black text-[#FFD100] shadow-xs'
+                    : 'border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <span className="font-black block">🏷️ Térmica Zebra/Elgin (60 x 40 mm)</span>
+                <span className="block text-[10px] opacity-80 mt-0.5">
+                  Rolo adesivo intermediário
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleChange('tamanho', 'termica_100x50')}
+                className={`p-3 rounded-xl border text-xs font-bold text-left transition-all cursor-pointer sm:col-span-2 ${
+                  config.tamanho === 'termica_100x50'
+                    ? 'border-black bg-black text-[#FFD100] shadow-xs'
+                    : 'border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <span className="font-black block">🏷️ Térmica Grande (100 x 50 mm)</span>
+                <span className="block text-[10px] opacity-80 mt-0.5">
+                  Para caixas, paletes e volumes grandes
                 </span>
               </button>
             </div>
           </div>
+
 
           {/* Botões de Ação */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">

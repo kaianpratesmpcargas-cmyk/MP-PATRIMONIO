@@ -48,24 +48,57 @@ export const BarcodeLabel: React.FC<BarcodeLabelProps> = ({
     }
   }, [codigo, isPrintVersion]);
 
+  // Determina as dimensões e classes de acordo com o tamanho selecionado
+  const getDimensionStyles = () => {
+    if (!isPrintVersion) {
+      return 'w-full max-w-[340px] p-3 shadow-md';
+    }
+
+    switch (config.tamanho) {
+      case 'termica_50x30':
+        return 'w-[50mm] h-[30mm] p-1.5 shadow-none text-[8px]';
+      case 'termica_60x40':
+        return 'w-[60mm] h-[40mm] p-2 shadow-none';
+      case 'termica_100x50':
+        return 'w-[100mm] h-[50mm] p-3 shadow-none';
+      case 'compacto':
+        return 'w-[70mm] h-[40mm] p-2 shadow-none';
+      case 'padrao':
+      default:
+        return 'w-[85mm] h-[48mm] p-2.5 shadow-none';
+    }
+  };
+
+  const getCutLineWidth = () => {
+    switch (config.tamanho) {
+      case 'termica_50x30':
+        return 'w-[50mm]';
+      case 'termica_60x40':
+        return 'w-[60mm]';
+      case 'termica_100x50':
+        return 'w-[100mm]';
+      case 'compacto':
+        return 'w-[70mm]';
+      default:
+        return 'w-[85mm]';
+    }
+  };
+
+  const isThermal = config.tamanho.startsWith('termica_');
+  const showCutLineFinal = isThermal ? false : isCutLineActive;
+
   return (
-    <div className={`flex flex-col items-center ${isCutLineActive ? 'p-1.5' : ''}`}>
+    <div className={`flex flex-col items-center ${showCutLineFinal ? 'p-1.5' : 'p-0.5'}`}>
       {/* Guia de Corte com Tesoura para Impressão em Papel Sulfite A4 */}
-      {isCutLineActive && (
-        <div className="w-[85mm] flex items-center justify-between text-[9px] text-gray-500 font-mono mb-1 select-none">
+      {showCutLineFinal && (
+        <div className={`${getCutLineWidth()} flex items-center justify-between text-[9px] text-gray-500 font-mono mb-1 select-none`}>
           <span>✂ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
         </div>
       )}
 
       {/* Cartão Físico da Etiqueta */}
       <div
-        className={`bg-white text-black border-2 border-black rounded-md flex flex-col justify-between select-none ${
-          isPrintVersion
-            ? config.tamanho === 'compacto'
-              ? 'w-[70mm] h-[40mm] p-2 shadow-none'
-              : 'w-[85mm] h-[48mm] p-2.5 shadow-none'
-            : 'w-full max-w-[340px] p-3 shadow-md'
-        } ${className}`}
+        className={`bg-white text-black border-2 border-black rounded-md flex flex-col justify-between select-none ${getDimensionStyles()} ${className}`}
         style={{
           boxSizing: 'border-box',
           backgroundColor: '#ffffff',
@@ -74,28 +107,30 @@ export const BarcodeLabel: React.FC<BarcodeLabelProps> = ({
         }}
       >
         {/* Cabeçalho da Etiqueta com Símbolo [MP] em destaque */}
-        <div className="w-full bg-black text-white px-2 py-1 rounded-xs flex items-center justify-between">
+        <div className="w-full bg-black text-white px-1.5 py-0.5 rounded-xs flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             {/* Símbolo MP */}
-            <span className="bg-white text-black font-black text-[11px] px-1 py-0.5 rounded-xs tracking-tighter leading-none">
+            <span className="bg-white text-black font-black text-[10px] px-1 py-0.5 rounded-xs tracking-tighter leading-none">
               {config.simboloTexto || 'MP'}
             </span>
             {/* Nome da Empresa */}
-            <span className="font-black text-xs tracking-wider uppercase">
+            <span className="font-black text-[11px] tracking-wider uppercase">
               {config.empresaNome || 'MP CARGAS'}
             </span>
           </div>
 
           {/* Subtítulo / Rótulo */}
-          <span className="text-[9px] font-bold tracking-tight uppercase text-gray-200">
+          <span className="text-[8px] font-bold tracking-tight uppercase text-gray-200">
             {config.subtitulo || 'PATRIMÔNIO'}
           </span>
         </div>
 
         {/* Código do Patrimônio em Destaque */}
         <div className="text-center my-0.5">
-          <span className="font-mono font-black text-2xl tracking-widest text-black">
-            {codigo || 'PAT-000000'}
+          <span className={`font-mono font-black tracking-widest text-black ${
+            config.tamanho === 'termica_50x30' ? 'text-lg' : 'text-2xl'
+          }`}>
+            {codigo || 'MP-000000'}
           </span>
         </div>
 
@@ -105,25 +140,26 @@ export const BarcodeLabel: React.FC<BarcodeLabelProps> = ({
         </div>
 
         {/* Rodapé: Descrição e Informações Adicionais */}
-        <div className="w-full border-t-2 border-black pt-1 mt-0.5 text-center">
-          <p className="font-black text-xs uppercase text-black leading-tight truncate">
+        <div className="w-full border-t-2 border-black pt-0.5 mt-0.5 text-center">
+          <p className="font-black text-[11px] uppercase text-black leading-tight truncate">
             {descricao || 'DESCRIÇÃO DO PATRIMÔNIO'}
           </p>
           {config.mostrarSetorLocal && (setor || localizacao) && (
-            <p className="text-[9px] font-bold text-black uppercase mt-0.5 truncate">
+            <p className="text-[8px] font-bold text-black uppercase mt-0.5 truncate">
               {[setor, localizacao].filter(Boolean).join(' • ')}
             </p>
           )}
         </div>
       </div>
 
-      {isCutLineActive && (
-        <div className="w-[85mm] flex items-center justify-between text-[9px] text-gray-500 font-mono mt-1 select-none">
+      {showCutLineFinal && (
+        <div className={`${getCutLineWidth()} flex items-center justify-between text-[9px] text-gray-500 font-mono mt-1 select-none`}>
           <span>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
         </div>
       )}
     </div>
   );
 };
+
 
 

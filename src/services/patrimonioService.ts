@@ -128,8 +128,23 @@ export async function createPatrimonio(item: NewPatrimonioInput): Promise<Patrim
     throw new Error(error.message || 'Erro ao salvar no banco central');
   }
 
+  // Registra no histórico
+  try {
+    await registrarHistorico({
+      patrimonio_codigo: finalCodigo,
+      tipo: 'cadastro',
+      titulo: 'Cadastrado no Sistema',
+      descricao: `Patrimônio criado com status "${payload.status}"`,
+      setor_novo: payload.setor || undefined,
+      responsavel: payload.responsavel || undefined,
+    });
+  } catch {
+    // Silently continue
+  }
+
   return data as Patrimonio;
 }
+
 
 /**
  * Busca um patrimônio exatamente pelo código
@@ -327,7 +342,178 @@ export async function updatePatrimonioConferencia(
     throw new Error(error.message || 'Erro ao registrar conferência do patrimônio.');
   }
 
+  // Registra no histórico de movimentação
+  try {
+    let tituloEvento = 'Conferência Realizada';
+    if (data.status === 'Baixado' || data.status === 'Avariado') {
+      tituloEvento = `Baixa Registrada (${data.status})`;
+    } else if (data.status === 'Em Manutenção') {
+      tituloEvento = 'Encaminhado para Manutenção';
+    } else if (data.condicao) {
+      tituloEvento = `Conferido: ${data.condicao}`;
+    }
+
+    await registrarHistorico({
+      patrimonio_codigo: formattedCode,
+      tipo: data.status === 'Baixado' ? 'baixa' : 'conferencia',
+      titulo: tituloEvento,
+      descricao: data.observacoes || `Status atualizado para "${data.status}"`,
+      setor_novo: data.setor || updated.setor,
+      responsavel: data.responsavel || updated.responsavel,
+    });
+  } catch (histErr) {
+    console.warn('Não foi possível gravar log no histórico:', histErr);
+  }
+
   return updated as Patrimonio;
 }
+
+/**
+ * Atualiza os dados de cadastro de um patrimônio (Edição/Correção)
+ */
+export async function updatePatrimonio(
+  codigo: string,
+  updates: {
+    descricao: string;
+    categoria?: string;
+    setor?: string;
+    localizacao?: string;
+    responsavel?: string;
+    numero_serie?: string;
+    status?: string;
+    condicao?: string;
+    observacoes?: string;
+  }
+): Promise<Patrimonio> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    throw new Error('Supabase não conectado.');
+  }
+
+  const formattedCode = formatCodeInput(codigo);
+
+  // Busca dados anteriores para comparar se houve movimentação de setor
+  const { data: itemAntigo } = await supabase
+    .from('patrimonios')
+    .select('setor, localizacao, status')
+    .ilike('codigo', formattedCode)
+    .maybeSingle();
+
+  const payload: any = {
+    descricao: updates.descricao.trim(),
+    categoria: updates.categoria?.trim() || null,
+    setor: updates.setor?.trim() || null,
+    localizacao: updates.localizacao?.trim() || null,
+    responsavel: updates.responsavel?.trim() || null,
+    numero_serie: updates.numero_serie?.trim() || null,
+    status: updates.status || 'Ativo',
+  };
+
+  if (updates.condicao !== undefined) payload.condicao = updates.condicao;
+  if (updates.observacoes !== undefined) payload.observacoes = updates.observacoes;
+
+  const { data: updated, error } = await supabase
+    .from('patrimonios')
+    .update(payload)
+    .ilike('codigo', formattedCode)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message || 'Erro ao atualizar dados do patrimônio.');
+  }
+
+  // Registra no histórico
+  try {
+    const mudouSetor = itemAntigo && itemAntigo.setor !== payload.setor;
+    const mudouStatus = itemAntigo && itemAntigo.status !== payload.status;
+
+    let titulo = 'Cadastro Editado';
+    let tipo = 'edicao';
+
+    if (mudouSetor) {
+      titulo = `Transferido de Setor (${itemAntigo?.setor || 'Sem setor'} ➔ ${payload.setor || 'Sem setor'})`;
+      tipo = 'movimentacao';
+    } else if (mudouStatus) {
+      titulo = `Status alterado para "${payload.status}"`;
+    }
+
+    await registrarHistorico({
+      patrimonio_codigo: formattedCode,
+      tipo,
+      titulo,
+      descricao: updates.observacoes || (mudouSetor ? `Item alocado em ${payload.localizacao || 'novo local'}` : 'Dados do patrimônio corrigidos'),
+      setor_anterior: itemAntigo?.setor,
+      setor_novo: payload.setor,
+      responsavel: payload.responsavel,
+    });
+  } catch (histErr) {
+    console.warn('Erro ao salvar histórico de edição:', histErr);
+  }
+
+  return updated as Patrimonio;
+}
+
+/**
+ * Registra um evento no histórico/linha do tempo do patrimônio
+ */
+export async function registrarHistorico(evento: {
+  patrimonio_codigo: string;
+  tipo: string;
+  titulo: string;
+  descricao?: string;
+  setor_anterior?: string;
+  setor_novo?: string;
+  responsavel?: string;
+}): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) return;
+
+  try {
+    await supabase.from('historico_patrimonio').insert([
+      {
+        patrimonio_codigo: formatCodeInput(evento.patrimonio_codigo),
+        tipo: evento.tipo,
+        titulo: evento.titulo,
+        descricao: evento.descricao || null,
+        setor_anterior: evento.setor_anterior || null,
+        setor_novo: evento.setor_novo || null,
+        responsavel: evento.responsavel || null,
+      },
+    ]);
+  } catch (err) {
+    console.warn('Aviso: Tabela historico_patrimonio ainda não criada ou inacessível:', err);
+  }
+}
+
+/**
+ * Busca o histórico de movimentações e auditorias de um patrimônio
+ */
+export async function getHistoricoPatrimonio(codigo: string): Promise<any[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
+  const formattedCode = formatCodeInput(codigo);
+
+  try {
+    const { data, error } = await supabase
+      .from('historico_patrimonio')
+      .select('*')
+      .ilike('patrimonio_codigo', formattedCode)
+      .order('criado_em', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      console.warn('Aviso ao carregar histórico:', error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.warn('Falha na busca de histórico:', err);
+    return [];
+  }
+}
+
 
 

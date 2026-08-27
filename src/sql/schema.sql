@@ -70,12 +70,38 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- 6. Habilitar Segurança por Linha (RLS)
+-- 6. Habilitar Segurança por Linha (RLS) para Patrimônios
 ALTER TABLE public.patrimonios ENABLE ROW LEVEL SECURITY;
 
--- 7. Políticas de Acesso
 DROP POLICY IF EXISTS "Permitir acesso completo aos patrimonios" ON public.patrimonios;
 CREATE POLICY "Permitir acesso completo aos patrimonios"
 ON public.patrimonios FOR ALL
 USING (true)
 WITH CHECK (true);
+
+-- 7. Tabela de Histórico de Movimentações e Auditorias (Linha do Tempo)
+CREATE TABLE IF NOT EXISTS public.historico_patrimonio (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patrimonio_codigo VARCHAR(20) NOT NULL,
+    tipo VARCHAR(50) NOT NULL, -- 'cadastro', 'edicao', 'conferencia', 'baixa', 'movimentacao'
+    titulo TEXT NOT NULL,
+    descricao TEXT,
+    setor_anterior VARCHAR(100),
+    setor_novo VARCHAR(100),
+    responsavel VARCHAR(100),
+    criado_em TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_historico_codigo ON public.historico_patrimonio (patrimonio_codigo);
+CREATE INDEX IF NOT EXISTS idx_historico_criado_em ON public.historico_patrimonio (criado_em DESC);
+
+-- 8. Habilitar Segurança por Linha (RLS) para Histórico
+ALTER TABLE public.historico_patrimonio ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir acesso completo ao historico" ON public.historico_patrimonio;
+CREATE POLICY "Permitir acesso completo ao historico"
+ON public.historico_patrimonio FOR ALL
+USING (true)
+WITH CHECK (true);
+
+

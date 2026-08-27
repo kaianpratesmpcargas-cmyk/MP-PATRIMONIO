@@ -16,8 +16,21 @@ export interface Patrimonio {
 
 export type NewPatrimonioInput = Omit<Patrimonio, 'id' | 'created_at'>;
 
+export interface HistoricoEvento {
+  id?: string;
+  patrimonio_codigo: string;
+  tipo: 'cadastro' | 'edicao' | 'conferencia' | 'baixa' | 'movimentacao' | string;
+  titulo: string;
+  descricao?: string;
+  setor_anterior?: string;
+  setor_novo?: string;
+  responsavel?: string;
+  criado_em?: string;
+}
+
 export interface SupabaseConfig {
   url: string;
   anonKey: string;
 }
+
 
