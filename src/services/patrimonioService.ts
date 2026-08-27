@@ -581,23 +581,28 @@ export function generateWhatsAppComprovanteLink(item: Patrimonio, telefoneDestin
   const dataHoje = new Date().toLocaleDateString('pt-BR');
   const horaHoje = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-  const saudacaoNome = item.responsavel ? `Olá *${item.responsavel}*,` : 'Olá,';
+  const saudacaoNome = item.responsavel && item.responsavel.trim() 
+    ? `Olá *${item.responsavel.trim()}*,` 
+    : 'Olá,';
+
+  const localizacaoTexto = [item.setor, item.localizacao].filter(Boolean).join(' • ') || 'Não especificado';
 
   const texto = 
 `${saudacaoNome}
 
 📦 *COMPROVANTE DE ENTREGA DE PATRIMÔNIO*
-🏢 *MP CARGAS*
+🏢 *MP CARGAS — LOGÍSTICA & TRANSPORTES*
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Confirmamos a atribuição do seguinte bem sob sua responsabilidade:
-
-🔹 *Código:* \`${item.codigo}\`
-🔹 *Descrição:* *${item.descricao}*
-🔹 *Setor / Local:* ${[item.setor, item.localizacao].filter(Boolean).join(' • ') || 'Não especificado'}
-${item.numero_serie ? `🔹 *Nº de Série:* \`${item.numero_serie}\`\n` : ''}🔹 *Status:* ${item.status || 'Ativo'}
+🏷️ *Código:* *${item.codigo}*
+📋 *Descrição:* *${item.descricao}*
+📍 *Setor / Local:* ${localizacaoTexto}
+${item.numero_serie ? `🔢 *Nº de Série:* ${item.numero_serie}\n` : ''}⚡ *Status:* *${item.status || 'Ativo'}*
 📅 *Data:* ${dataHoje} às ${horaHoje}
 
-_Por favor, zele pela integridade do equipamento. Em caso de defeito ou transferência, comunique o setor responsável._`;
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+_Confirmo a entrega e guarda do equipamento acima sob minha responsabilidade._
+_Em caso de avaria, manutenção ou transferência de setor, comunique a coordenação da MP CARGAS._`;
 
   const textoEncoded = encodeURIComponent(texto);
 
@@ -609,6 +614,7 @@ _Por favor, zele pela integridade do equipamento. Em caso de defeito ou transfer
 
   return `https://wa.me/?text=${textoEncoded}`;
 }
+
 
 
 

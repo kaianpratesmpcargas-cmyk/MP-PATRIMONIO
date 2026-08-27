@@ -19,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleRole,
 }) => {
   return (
-    <header className="bg-[#111111] text-white border-b-[3px] border-[#FFD100] sticky top-0 z-40 shadow-md select-none no-print safe-top">
+    <header className="bg-[#0f0f12]/95 backdrop-blur-xl text-white border-b border-neutral-800/80 sticky top-0 z-40 shadow-[0_4px_25px_-4px_rgba(0,0,0,0.5)] select-none no-print safe-top">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
 
         {/* Marca / Logotipo */}
@@ -27,32 +27,32 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={() => onNavigate('home')}
           className="flex items-center gap-3 cursor-pointer group shrink-0"
         >
-          <div className="w-9 h-9 rounded-xl bg-[#FFD100] text-black font-black text-lg flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FFD100] to-[#F59E0B] text-black font-black text-lg flex items-center justify-center shadow-lg shadow-[#FFD100]/20 group-hover:scale-105 transition-all">
             MP
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="font-black text-base sm:text-lg tracking-wider text-white">
+              <span className="font-black text-lg sm:text-xl tracking-tight text-white group-hover:text-[#FFD100] transition-colors">
                 MP CARGAS
               </span>
-              <span className="hidden sm:inline-block bg-[#FFD100] text-black text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
+              <span className="hidden sm:inline-block bg-[#FFD100]/15 text-[#FFD100] border border-[#FFD100]/30 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                 Patrimônio
               </span>
             </div>
-            <span className="text-[10px] text-gray-400 font-medium leading-none">
-              Gerador de Etiquetas
+            <span className="text-[10px] text-neutral-400 font-medium leading-none tracking-wide">
+              Gestão de Ativos & Etiquetas
             </span>
           </div>
         </div>
 
         {/* Menu de Navegação Desktop */}
-        <nav className="hidden md:flex items-center gap-1.5">
+        <nav className="hidden md:flex items-center gap-1 bg-neutral-900/90 p-1.5 rounded-2xl border border-neutral-800/80 shadow-inner">
           <button
             onClick={() => onNavigate('home')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
               currentScreen === 'home'
-                ? 'bg-gray-800 text-[#FFD100] shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+                ? 'bg-neutral-800 text-[#FFD100] shadow-sm ring-1 ring-neutral-700'
+                : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
             }`}
           >
             Início
@@ -61,10 +61,10 @@ export const Header: React.FC<HeaderProps> = ({
           {userRole === 'admin' && (
             <button
               onClick={() => onNavigate('new')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                 currentScreen === 'new'
-                  ? 'bg-[#FFD100] text-black shadow-xs'
-                  : 'text-gray-300 hover:text-[#FFD100] hover:bg-gray-800/60'
+                  ? 'bg-[#FFD100] text-black shadow-md shadow-[#FFD100]/20'
+                  : 'text-[#FFD100] hover:bg-[#FFD100]/10'
               }`}
             >
               <PlusCircle className="w-3.5 h-3.5" />
@@ -74,22 +74,22 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={() => onNavigate('scan')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
               currentScreen === 'scan'
-                ? 'bg-white text-black shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-neutral-300 hover:text-white hover:bg-neutral-800/50'
             }`}
           >
             <Search className="w-3.5 h-3.5" />
-            <span>Consultar / Bipar</span>
+            <span>Consultar</span>
           </button>
 
           <button
             onClick={() => onNavigate('conferencia')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
               currentScreen === 'conferencia'
-                ? 'bg-emerald-500 text-black font-black shadow-xs'
-                : 'text-emerald-300 hover:text-white hover:bg-emerald-950/40'
+                ? 'bg-emerald-500 text-black font-black shadow-sm shadow-emerald-500/20'
+                : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30'
             }`}
           >
             <ClipboardCheck className="w-3.5 h-3.5" />
@@ -98,10 +98,10 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={() => onNavigate('setores')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
               currentScreen === 'setores'
-                ? 'bg-gray-800 text-[#FFD100] shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+                ? 'bg-neutral-800 text-[#FFD100] shadow-sm ring-1 ring-neutral-700'
+                : 'text-neutral-300 hover:text-white hover:bg-neutral-800/50'
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
@@ -110,10 +110,10 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={() => onNavigate('list')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
               currentScreen === 'list'
-                ? 'bg-gray-800 text-[#FFD100] shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+                ? 'bg-neutral-800 text-[#FFD100] shadow-sm ring-1 ring-neutral-700'
+                : 'text-neutral-300 hover:text-white hover:bg-neutral-800/50'
             }`}
           >
             <List className="w-3.5 h-3.5" />
@@ -123,39 +123,38 @@ export const Header: React.FC<HeaderProps> = ({
           {userRole === 'admin' && (
             <button
               onClick={() => onNavigate('config')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                 currentScreen === 'config'
-                  ? 'bg-gray-800 text-[#FFD100] shadow-xs'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+                  ? 'bg-neutral-800 text-[#FFD100] shadow-sm ring-1 ring-neutral-700'
+                : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
               }`}
             >
               <Settings className="w-3.5 h-3.5" />
-              <span>Configurações</span>
+              <span>Ajustes</span>
             </button>
           )}
         </nav>
 
         {/* Lado Direito: Perfil de Acesso + Usuário Logado + Sair */}
         <div className="flex items-center gap-2.5 shrink-0">
-          {/* Badge / Seletor de Perfil (Admin / Operador) */}
           {onToggleRole && (
             <button
               onClick={onToggleRole}
               title={`Perfil atual: ${userRole.toUpperCase()}. Clique para alternar.`}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                 userRole === 'admin'
-                  ? 'bg-[#FFD100] text-black border-[#E5BC00] shadow-xs'
-                  : 'bg-gray-800 text-blue-300 border-gray-700'
+                  ? 'bg-gradient-to-r from-[#FFD100] to-[#F59E0B] text-black shadow-md shadow-[#FFD100]/20 hover:opacity-90'
+                  : 'bg-neutral-800 hover:bg-neutral-700 text-blue-300 border border-neutral-700'
               }`}
             >
               {userRole === 'admin' ? (
                 <>
-                  <Shield className="w-3 h-3 text-black" />
+                  <Shield className="w-3.5 h-3.5 text-black" />
                   <span>Admin</span>
                 </>
               ) : (
                 <>
-                  <User className="w-3 h-3 text-blue-400" />
+                  <User className="w-3.5 h-3.5 text-blue-400" />
                   <span>Operador</span>
                 </>
               )}
@@ -163,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {userEmail && (
-            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-gray-900/80 rounded-lg border border-gray-800 text-[11px] text-gray-300 font-medium">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-neutral-900/90 rounded-xl border border-neutral-800 text-xs text-neutral-300 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
               <span className="truncate max-w-[150px]">{userEmail}</span>
             </div>
@@ -173,7 +172,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onLogout}
               title="Sair do Sistema"
-              className="flex items-center gap-1.5 bg-gray-900 hover:bg-red-950/80 hover:text-red-300 hover:border-red-800/80 text-gray-400 text-xs font-bold py-1.5 px-3 rounded-lg border border-gray-800 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 bg-neutral-900 hover:bg-red-950/60 hover:text-red-300 hover:border-red-800/60 text-neutral-400 text-xs font-bold py-1.5 px-3 rounded-xl border border-neutral-800 transition-all cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Sair</span>
@@ -184,6 +183,7 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+
 
 
 
