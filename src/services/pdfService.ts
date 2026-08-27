@@ -1,4 +1,4 @@
-﻿import { jsPDF } from 'jspdf';
+import { jsPDF } from 'jspdf';
 import JsBarcode from 'jsbarcode';
 import type { Patrimonio } from '../types/patrimonio';
 import { generateWhatsAppComprovanteLink } from './patrimonioService';
@@ -230,42 +230,43 @@ export function generateTermoPDF(patrimonio: Patrimonio): { doc: jsPDF; blob: Bl
 }
 
 /**
- * Envia o Termo Oficial em PDF DIRETO PARA O WHATSAPP em 1 clique:
- * - Em Celulares (iPhone e Android): Abre o WhatsApp nativo com o arquivo PDF já anexado via Web Share API!
- * - Em Computadores (Desktop): Faz o download imediato do PDF e abre a conversa do WhatsApp Web com os dados e confirmação!
+ * Envia o Termo Oficial DIRETO PARA O WHATSAPP:
+ * - Abre a conversa do WhatsApp imediatamente com o número preenchido (ou lista de contatos).
+ * - Gera e baixa o arquivo PDF oficial automaticamente para envio rápido.
  */
 export async function enviarTermoDiretoWhatsApp(
   patrimonio: Patrimonio,
   telefoneDestinatario?: string
 ): Promise<{ success: boolean; method: 'native_share' | 'download_and_whatsapp' }> {
   const { doc, blob, filename } = generateTermoPDF(patrimonio);
-  const pdfFile = new File([blob], filename, { type: 'application/pdf' });
+  const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  const mensagemTexto = `Olá ${patrimonio.responsavel ? `*${patrimonio.responsavel}*` : ''}, segue o *Termo Oficial de Cautela e Entrega de Patrimônio* do item *${patrimonio.codigo}* (*${patrimonio.descricao}*) emitido pela *MP CARGAS*.`;
-
-  // 1. TENTA COMPARTILHAR DIRETO O ARQUIVO PDF NO WHATSAPP (iOS / Android / PWA)
-  if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-    try {
-      await navigator.share({
-        title: `Comprovante MP CARGAS - ${patrimonio.codigo}`,
-        text: mensagemTexto,
-        files: [pdfFile],
-      });
-      return { success: true, method: 'native_share' };
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        // Usuário apenas fechou a janela de compartilhamento
-        return { success: false, method: 'native_share' };
+  // Se for celular e o usuário NÃO informou um telefone específico, tenta a folha de compartilhamento nativa
+  if (isMobile && !telefoneDestinatario && navigator.canShare) {
+    const pdfFile = new File([blob], filename, { type: 'application/pdf' });
+    if (navigator.canShare({ files: [pdfFile] })) {
+      try {
+        await navigator.share({
+          title: `Comprovante MP CARGAS - ${patrimonio.codigo}`,
+          text: `Olá, segue o *Termo Oficial de Cautela e Entrega de Patrimônio* do item *${patrimonio.codigo}* (*${patrimonio.descricao}*) emitido pela *MP CARGAS*.`,
+          files: [pdfFile],
+        });
+        return { success: true, method: 'native_share' };
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          return { success: false, method: 'native_share' };
+        }
       }
-      console.warn('Falha no compartilhamento nativo de arquivo, usando fallback WhatsApp:', err);
     }
   }
 
-  // 2. FALLBACK PARA COMPUTADOR / DESKTOP:
-  // Salva o PDF no computador e abre o WhatsApp Web com a mensagem pronta
+  // Baixa o arquivo PDF oficial automaticamente
   doc.save(filename);
+
+  // Abre a conversa do WhatsApp diretamente com o número informado e mensagem formatada
   const linkWhatsApp = generateWhatsAppComprovanteLink(patrimonio, telefoneDestinatario);
   window.open(linkWhatsApp, '_blank');
 
   return { success: true, method: 'download_and_whatsapp' };
 }
+

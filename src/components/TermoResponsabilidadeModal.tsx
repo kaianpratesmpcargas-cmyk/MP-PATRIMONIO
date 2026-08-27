@@ -18,6 +18,7 @@ export const TermoResponsabilidadeModal: React.FC<TermoResponsabilidadeModalProp
   patrimonio,
 }) => {
   const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+  const [whatsAppPhone, setWhatsAppPhone] = useState('');
   const svgBarcodeRef = useRef<SVGSVGElement | null>(null);
   const svgPrintBarcodeRef = useRef<SVGSVGElement | null>(null);
 
@@ -65,7 +66,7 @@ export const TermoResponsabilidadeModal: React.FC<TermoResponsabilidadeModalProp
   const handleDirectWhatsAppPDF = async () => {
     setIsSendingWhatsApp(true);
     try {
-      await enviarTermoDiretoWhatsApp(patrimonio);
+      await enviarTermoDiretoWhatsApp(patrimonio, whatsAppPhone);
     } catch (err) {
       console.error('Erro ao enviar PDF pelo WhatsApp:', err);
     } finally {
@@ -91,7 +92,7 @@ export const TermoResponsabilidadeModal: React.FC<TermoResponsabilidadeModalProp
                   Comprovante Oficial / Termo de Cautela
                 </h3>
                 <p className="text-xs text-neutral-500">
-                  Envio direto do PDF no WhatsApp ou impressão
+                  Envio direto com PDF para o WhatsApp do colaborador
                 </p>
               </div>
             </div>
@@ -215,15 +216,33 @@ export const TermoResponsabilidadeModal: React.FC<TermoResponsabilidadeModalProp
             </div>
           </div>
 
+          {/* Campo de Telefone do WhatsApp */}
+          <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 mb-3 shrink-0">
+            <label className="block text-xs font-black uppercase text-emerald-950 mb-1.5 flex items-center gap-1.5">
+              <MessageSquareShare className="w-4 h-4 text-emerald-700" />
+              <span>Número de WhatsApp do Colaborador / Motorista (com DDD):</span>
+            </label>
+            <input
+              type="tel"
+              value={whatsAppPhone}
+              onChange={(e) => setWhatsAppPhone(e.target.value)}
+              placeholder="Ex: 11999998888 (com DDD)"
+              className="w-full px-4 py-2.5 rounded-xl border border-emerald-300 text-sm font-bold bg-white text-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <p className="text-[10px] text-emerald-800/80 mt-1 font-medium">
+              💡 Digite o número com DDD para abrir a conversa direta, ou deixe em branco para escolher nos contatos.
+            </p>
+          </div>
+
           {/* Botões de Ação com Envio Direto ao WhatsApp */}
-          <div className="pt-4 border-t border-neutral-100 flex flex-col sm:flex-row gap-3 shrink-0">
+          <div className="pt-2 border-t border-neutral-100 flex flex-col sm:flex-row gap-3 shrink-0">
             <button
               onClick={handleDirectWhatsAppPDF}
               disabled={isSendingWhatsApp}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-99 text-white font-black text-sm py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer disabled:opacity-60"
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-99 text-white font-black text-sm py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer disabled:opacity-60"
             >
               <MessageSquareShare className="w-5 h-5 text-emerald-100" />
-              <span>{isSendingWhatsApp ? 'PREPARANDO PDF...' : 'ENVIAR PDF DIRETO NO WHATSAPP'}</span>
+              <span>{isSendingWhatsApp ? 'ENVIANDO...' : 'ENVIAR NO WHATSAPP COM PDF'}</span>
             </button>
 
             <button
@@ -243,6 +262,7 @@ export const TermoResponsabilidadeModal: React.FC<TermoResponsabilidadeModalProp
           </div>
         </div>
       </div>
+
 
       {/* RENDERIZAÇÃO EXCLUSIVA PARA IMPRESSÃO EM FOLHA A4 (via Portal #mp-print-root) */}
       {printRoot &&
