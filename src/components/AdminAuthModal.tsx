@@ -88,10 +88,8 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
               />
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             </div>
-            <p className="text-[10px] text-neutral-400 mt-1 font-medium">
-              💡 Senha padrão: <code className="font-mono bg-neutral-100 px-1 py-0.5 rounded">mp2026</code>
-            </p>
           </div>
+
 
           <div className="pt-2 flex gap-2">
             <button
