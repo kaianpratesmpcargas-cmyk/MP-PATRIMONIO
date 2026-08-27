@@ -586,6 +586,8 @@ export function generateWhatsAppComprovanteLink(item: Patrimonio, telefoneDestin
     : 'Olá,';
 
   const localizacaoTexto = [item.setor, item.localizacao].filter(Boolean).join(' • ') || 'Não especificado';
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://mpcargas.vercel.app';
+  const comprovanteUrl = `${baseUrl}/?comprovante=${encodeURIComponent(item.codigo)}`;
 
   const texto = 
 `${saudacaoNome}
@@ -600,9 +602,12 @@ export function generateWhatsAppComprovanteLink(item: Patrimonio, telefoneDestin
 ${item.numero_serie ? `🔢 *Nº de Série:* ${item.numero_serie}\n` : ''}⚡ *Status:* *${item.status || 'Ativo'}*
 📅 *Data:* ${dataHoje} às ${horaHoje}
 
+📄 *Acessar Termo Oficial / Baixar PDF:*
+👉 ${comprovanteUrl}
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-_Confirmo a entrega e guarda do equipamento acima sob minha responsabilidade._
-_Em caso de avaria, manutenção ou transferência de setor, comunique a coordenação da MP CARGAS._`;
+_Confirmo a entrega e guarda do equipamento sob minha responsabilidade._
+_Em caso de avaria ou transferência, comunique a coordenação da MP CARGAS._`;
 
   const textoEncoded = encodeURIComponent(texto);
 
@@ -614,6 +619,7 @@ _Em caso de avaria, manutenção ou transferência de setor, comunique a coorden
 
   return `https://wa.me/?text=${textoEncoded}`;
 }
+
 
 
 

@@ -8,10 +8,19 @@ import { ConfigScreen } from './screens/ConfigScreen';
 import { ConferenciaScreen } from './screens/ConferenciaScreen';
 import { SetoresScreen } from './screens/SetoresScreen';
 import { LoginScreen } from './screens/LoginScreen';
+import { ComprovantePublicoScreen } from './screens/ComprovantePublicoScreen';
 import { getSupabase } from './services/supabase';
 import type { UserRole } from './types/patrimonio';
 
 export function App() {
+  const [publicCodigo, setPublicCodigo] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('comprovante') || p.get('termo');
+    }
+    return null;
+  });
+
   const [currentScreen, setCurrentScreen] = useState<'home' | 'new' | 'scan' | 'list' | 'config' | 'conferencia' | 'setores'>('home');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return Boolean(localStorage.getItem('mp_user_email'));
@@ -80,10 +89,24 @@ export function App() {
     setCurrentScreen(screen);
   };
 
+  // Se houver um parâmetro de comprovante na URL (ex: aberto pelo WhatsApp), renderiza o comprovante público
+  if (publicCodigo) {
+    return (
+      <ComprovantePublicoScreen
+        codigo={publicCodigo}
+        onGoToApp={() => {
+          window.history.replaceState({}, '', window.location.pathname);
+          setPublicCodigo(null);
+        }}
+      />
+    );
+  }
+
   // Se não estiver logado, exibe a tela de login restrita
   if (!isAuthenticated) {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
+
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#111111] antialiased">
